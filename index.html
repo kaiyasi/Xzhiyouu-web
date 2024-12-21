@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <title>Decode Tools</title>
+    <link rel="icon" href="logo.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="container">
+        <h1><span class="title-text">Some Useful Decode Tools</span><span class="emoji-group">( •̀ ω •́ )✧<button onclick="showHint()" class="hint-btn">🤫</button></span></h1>
+        <select id="decodeMethod">
+            <option value="base64">Base64</option>
+            <option value="rot13">ROT13</option>
+            <option value="caesar">Caesar</option>
+            <option value="ascii">ASCII</option>
+            <option value="binary">Binary</option>
+            <option value="hex">Hexadecimal</option>
+            <option value="decimal">Decimal</option>
+            <option value="flag">flag</option>
+        </select>
+        <input type="text" id="input" placeholder="Input...">
+        <div id="caesarShift" style="display: none;">
+            <input type="number" id="shift" placeholder="Please enter the displacement amount" min="1" max="25" value="1">
+        </div>
+        <div class="button-group">
+            <button onclick="decode()" class="decode-btn">Decode</button>
+        </div>
+        <div class="output" id="output"></div>
+        <div class="author">Author: xzhiyouu</div>
+    </div>
+</body>
+</html>
