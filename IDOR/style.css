@@ -21,3 +21,9 @@ body {
     color: green;
     display: none;
 }
+.author {
+    color: #888;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+}
