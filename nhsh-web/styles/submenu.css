@@ -1,0 +1,126 @@
+@media only screen and (min-width: 0) {
+    div.submenu_odd {
+        width: 100%;
+        float: left;
+    }
+
+    div.submenuTitle_odd {
+        width        : 100%;
+        border-bottom: 1px solid #CCC;
+        position     : relative;
+        margin-top   : .8em;
+    }
+
+    div.submenuTitle_odd img {
+        width        : .75em;
+        height       : .75em;
+        margin-bottom: -.1em;
+        transition   : linear 250ms;
+    }
+
+    div.submenuTitle_odd h3 {
+        max-width    : calc(100% - 2.5em);
+        z-index      : 1;
+        position     : relative;
+        bottom       : -1px;
+        left         : 0;
+        padding-right: .5em;
+    }
+
+    div.submenuContent_odd {
+        width: 100%;
+        float: left;
+    }
+
+    div.submenuContent_odd>ul {
+        margin-top: .5em;
+    }
+
+    div.submenuContent_odd ul {
+        width: 100%;
+        float: left;
+    }
+
+    div.submenuContent_odd ul ul {
+        width      : calc(100% - .5em);
+        margin-left: .5em;
+    }
+
+    div.submenuContent_odd ul li {
+        width: 100%;
+    }
+
+    div.submenuContent_odd ul li::before {
+        content: none;
+    }
+
+    div.submenuContent_odd ul li a {
+        width        : calc(100% - 10px - 2px);
+        float        : left;
+        padding      : 3px 5px;
+        border-radius: 5px;
+        margin-right : 5px;
+        margin-bottom: 5px;
+        transition   : linear 100ms;
+        cursor       : pointer;
+        font-size    : .9em;
+    }
+
+    div.submenu_odd:nth-child(n+2)>div.submenuContent_odd {
+        display: none;
+    }
+
+    div.submenu_odd:nth-child(n+2)>div.submenuTitle_odd>img {
+        transform: rotate(-90deg);
+    }
+
+    div.submenuTitle_odd h3 {
+        border-bottom: 1px solid rgb(125, 185, 222);
+    }
+
+    div.submenuContent_odd ul li a {
+        border: 1px solid rgb(125, 185, 222);
+    }
+
+    div.submenuContent_odd ul li:hover>a {
+        background-color: rgba(125, 185, 222, .8);
+    }
+
+    div.submenuContent_odd ul li[data-used]>a {
+        background-color: rgba(125, 185, 222, .8);
+        cursor          : default;
+    }
+
+    div.subSelect_odd ul li:hover {
+        background-color: rgba(125, 185, 222, .8);
+    }
+
+    div.subSelect_odd ul li[data-used] {
+        background-color: rgba(125, 185, 222, .8);
+        cursor          : default;
+    }
+
+    [data-page] div.submenuTitle_odd h3 {
+        border-bottom: 1px solid rgb(250, 214, 137);
+    }
+
+    [data-page] div.submenuContent_odd ul li {}
+
+    [data-page] div.submenuContent_odd ul li:hover {
+        background-color: rgba(250, 214, 137, .3);
+    }
+
+    [data-page] div.submenuContent_odd ul li[data-used] {
+        background-color: rgba(250, 214, 137, .3);
+        cursor          : default;
+    }
+
+    [data-page] div.subSelect_odd ul li:hover {
+        background-color: rgba(250, 214, 137, .3);
+    }
+
+    [data-page] div.subSelect_odd ul li[data-used] {
+        background-color: rgba(250, 214, 137, .3);
+        cursor          : default;
+    }
+}

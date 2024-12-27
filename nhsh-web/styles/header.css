@@ -1,0 +1,118 @@
+@media only screen and (min-width: 0) {
+    header {
+        width           : 100%;
+        top             : 0;
+        left            : 0;
+        transition      : linear 200ms;
+        z-index         : 2;
+        position        : fixed;
+        background      : white;
+        /* color        : white; */
+    }
+
+    div.headerBlock_odd {
+        width: 100%;
+        float: left;
+    }
+
+    a#escape {
+        color   : transparent;
+        position: absolute;
+        top     : 0;
+        left    : 0;
+    }
+
+    div.navigation_odd {
+        width                : 100%;
+        float                : right;
+        /* border-bottom     : 3px solid; */
+        border-image         : linear-gradient(to left, rgb(52, 151, 236) 0%, rgb(32, 107, 150) 40%);
+        border-image-slice   : 1;
+        padding-bottom       : .15em;
+    }
+
+    ul.navigation_odd {
+        width            : 95%;
+        padding-left     : 2.5%;
+        padding-right    : 2.5%;
+        text-align       : right;
+        float            : left;
+        /* padding-top   : .5em; */
+        /* padding-bottom: .5em; */
+    }
+
+    ul.navigation_odd li {
+        display  : inline-block;
+        font-size: .8em;
+        padding  : 0 5px;
+        height   : auto;
+    }
+
+    ul.navigation_odd li::before {
+        content: none;
+    }
+
+    ul.navigation_odd li::after {
+        content      : "|";
+        padding-left : 10px;
+        padding-right: 3px;
+    }
+
+    ul.navigation_odd li[data-usage="fonsSize"] {
+        padding-top: 10px;
+    }
+}
+
+@media only screen and (min-width: 1000px) {
+    header {
+        position    : relative;
+        width       : 95%;
+        margin-left : 2.5%;
+        margin-right: 2.5%;
+    }
+
+    ul.navigation_odd li[data-usage="fonsSize"] {
+        padding-top: 0;
+    }
+}
+
+@media only screen and (min-width: 1367px) {
+    header {
+        width       : 90%;
+        margin-left : 5%;
+        margin-right: 5%;
+    }
+}
+
+@media only screen and (min-width: 0) {
+    a#logo_odd {
+        display      : inline-block;
+        float        : left;
+        height       : 50px;
+        width        : auto;
+        position     : relative;
+        overflow     : hidden;
+        transition   : linear 50ms;
+        margin-top   : .5em;
+        margin-bottom: .5em;
+    }
+
+    a#logo_odd h1 {
+        color   : transparent;
+        position: absolute;
+        top     : 0;
+        left    : 0;
+    }
+
+    a#logo_odd img {
+        float     : left;
+        max-width : 100%;
+        max-height: 100%;
+    }
+}
+
+@media only screen and (min-width: 1000px) {
+    a#logo_odd {
+        height: 70px;
+    }
+}

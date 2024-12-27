@@ -1,0 +1,175 @@
+@media only screen and (min-width: 0) {
+    main {
+        width        : 95%;
+        padding-left : 2.5%;
+        padding-right: 2.5%;
+    }
+
+    div.contentTemp_odd {
+        width        : 100%;
+        float        : left;
+        margin-top   : 1.5em;
+        margin-bottom: 1.5em;
+    }
+
+
+
+    div.contentTempLeft_odd {
+        float     : left;
+        display   : none;
+        min-height: 1px;
+    }
+
+    div.contentTemp_odd[data-nosubmenu] div.contentTempLeft_odd {
+        display: none;
+    }
+
+    div.contentTempLeftBtm_odd {
+        float     : left;
+        width     : 100%;
+        margin-top: 1em;
+        min-height: 1px;
+    }
+
+    div.contentTemp_odd[data-nosubmenu] div.contentTempLeftBtm_odd {
+        display: none;
+    }
+
+    div.contentTemp_odd[data-page] div.contentTempRight_odd {
+        display: none;
+    }
+
+    div.contentTempRight_odd {
+        float     : left;
+        width     : 100%;
+        margin-top: 1em;
+        min-height: 1px;
+    }
+
+    div.contentTemp_odd[data-nosubmenu] div.contentTempRight_odd {
+        display: none;
+    }
+
+    div.contentTempContent_odd {
+        width         : 100%;
+        float         : left;
+        margin-top    : .5em;
+        padding-bottom: .5em;
+        border-bottom : 1px solid #EEE;
+    }
+
+    div.contentTempTitle_odd {
+        width        : 100%;
+        border-bottom: 1px solid #CCC;
+        position     : relative;
+        margin-top   : .5em;
+        margin-bottom: 2em;
+    }
+
+    div.contentTempTitle_odd img {
+        display: none;
+    }
+
+    div.contentTempTitle_odd h2 {
+        max-width    : calc(100% - 2.5em);
+        border-bottom: 1px solid rgb(42, 71, 191);
+        z-index      : 1;
+        position     : relative;
+        bottom       : -1px;
+        left         : 0;
+        padding-right: .5em;
+    }
+
+    div.contentTempTitle_odd span {
+        display: none;
+    }
+
+    div.contentTempTitle_odd label {
+        font-size   : .9em;
+        /* color       : #999; */
+        position    : absolute;
+        top         : 100%;
+        left        : 0;
+        float       : left;
+        margin-right: 15px;
+    }
+
+    div.contentTempTitle_odd a.contentTempBack_odd {
+        font-size: .9em;
+        position : absolute;
+        right    : 0;
+        bottom   : 1px;
+    }
+
+    div.contentTempContents_odd {
+        width   : 100%;
+        float   : left;
+        position: relative;
+    }
+
+    div.contentTempContents_odd a.contentTempBack_odd {
+        font-size: .9em;
+        float    : right;
+    }
+
+    div.content_rate {
+        text-align: right;
+        /* color     : #999; */
+        font-size : .75em;
+        margin-top: .5em;
+    }
+}
+
+@media only screen and (min-width: 1000px) {
+    div.contentTempLeft_odd {
+        display     : inline-block;
+        width       : 220px;
+        margin-right: 1em;
+    }
+
+    div.contentTempLeftBtm_odd {
+        display: none;
+    }
+
+    div.contentTempRight_odd {
+        width      : 220px;
+        margin-left: 1em;
+        margin-top : 0;
+    }
+
+    div.contentTempContent_odd {
+        margin-top: 0;
+    }
+
+    div.contentTempContent_odd {
+        width: calc(100% - 220px - 1em);
+    }
+}
+
+@media only screen and (min-width: 1367px) {
+    main {
+        width        : 90%;
+        padding-left : 5%;
+        padding-right: 5%;
+    }
+
+    div.contentTempLeft_odd,
+    div.contentTempRight_odd {
+        width: 270px;
+    }
+
+    div.contentTemp_odd[data-nosubmenu] div.contentTempLeft_odd,
+    div.contentTemp_odd[data-nosubmenu] div.contentTempRight_odd {
+        display: none;
+    }
+
+    div.contentTempContent_odd {
+        width: calc(100% - 270px - 1em);
+    }
+
+    div.contentTemp_odd[data-nosubmenu] div.contentTempContent_odd {
+        width: 100%;
+    }
+
+
+}

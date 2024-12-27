@@ -1,0 +1,46 @@
+@media only screen and (min-width: 0) {
+    * {
+        font-family: "Noto_Sans_TC_Bold";
+    }
+
+    body,
+    main {
+        float          : left;
+        scroll-behavior: smooth;
+        width          : 100%;
+    }
+
+    header,
+    footer {
+        float: left;
+    }
+
+    a {
+        display: inline-block;
+    }
+
+    a:hover {
+        color: rgba(39, 21, 107, 1);
+    }
+
+    a[href] {
+        cursor: pointer;
+    }
+
+    div.layout,
+    .layout {
+        width        : 95%;
+        padding-left : 2.5%;
+        padding-right: 2.5%;
+    }
+}
+
+@media only screen and (min-width: 1367px) {
+
+    div.layout,
+    .layout {
+        width        : 1300px;
+        padding-left : calc((100% - 1300px) / 2);
+        padding-right: calc((100% - 1300px) / 2);
+    }
+}

@@ -1,0 +1,234 @@
+@media only screen {
+    button.btn_edit {
+        background-image: url("/static/icon/edit.png");
+        background-size: 100%;
+        background-repeat: no-repeat;
+        background-position: center;
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        margin-left: 3px;
+        margin-right: 3px;
+    }
+    button.btn_conf {
+        background-image: url("/static/icon/setting.png");
+        background-size: 100%;
+        background-repeat: no-repeat;
+        background-position: center;
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        margin-left: 3px;
+        margin-right: 3px;
+    }
+    button.btn_del {
+        background-image: url("/static/icon/delete.png");
+        background-size: 100%;
+        background-repeat: no-repeat;
+        background-position: center;
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        margin-left: 3px;
+        margin-right: 3px;
+    }
+    button.btn_done {
+        background-image: url("/static/icon/check.png");
+        background-size: 100%;
+        background-repeat: no-repeat;
+        background-position: center;
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        margin-left: 3px;
+        margin-right: 3px;
+    }
+}
+@media only screen {
+    .btn {
+        box-shadow: 1px 1px 1px 1px #AAA;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .btn:active {
+        box-shadow: inset 1px 1px 1px 1px #CCC;
+    }
+    .btns_odd {
+        width: 50px;
+        padding: 3px;
+        margin: 0 0 0 3px;
+    }
+    .btn_move {
+        transition: 750ms ease;
+        position: relative;
+        right: calc(-50% - 5px);
+    }
+    .btn_active {
+        transform: translateX(calc(-100% - 10px));
+    }
+    .btn_accept_odd {
+        background: linear-gradient(0, rgb(17, 102, 255), rgb(88, 159, 248));
+        color: #F8F8F8;
+        border-radius: 7px;
+        padding: 3px;
+    }
+    .btn_accept_odd:hover {
+        background: linear-gradient(0, rgb(37, 122, 255), rgb(108, 179, 255));
+    }
+    .btn_accept_odd:active {
+        background: linear-gradient(0, rgb(0, 82, 235), rgb(68, 139, 228));
+    }
+    .btn_skyblue_odd {
+        background: linear-gradient(0, rgb(67, 152, 255), rgb(138, 209, 255));
+        color: #F8F8F8;
+        border-radius: 7px;
+        padding: 3px;
+    }
+    .btn_skyblue_odd:hover {
+        background: linear-gradient(0, rgb(87, 172, 255), rgb(158, 229, 255));
+    }
+    .btn_skyblue_odd:active {
+        background: linear-gradient(0, rgb(47, 132, 255), rgb(118, 189, 255));
+    }
+    .btn_cancel_odd {
+        background: linear-gradient(0, rgb(128, 127, 133), rgb(162, 161, 167));
+        color: #F8F8F8;
+        border-radius: 7px;
+        padding: 3px;
+    }
+    .btn_cancel_odd:hover {
+        background: linear-gradient(0, rgb(148, 147, 153), rgb(182, 181, 187));
+    }
+    .btn_cancel_odd:active {
+        background: linear-gradient(0, rgb(108, 107, 113), rgb(142, 141, 147));
+    }
+    .btn_unfocus_odd {
+        background: linear-gradient(0, rgb(238, 238, 238), rgb(245, 245, 245));
+        border: 1px solid rgb(189, 189, 189);
+        color: #414141;
+        border-radius: 7px;
+        padding: 2px;
+    }
+    .btn_unfocus_odd:hover {
+        background: linear-gradient(0, rgb(248, 248, 248), rgb(255, 255, 255));
+    }
+    .btn_unfocus_odd:active {
+        background: linear-gradient(0, rgb(218, 218, 218), rgb(225, 225, 225));
+    }
+    .btn_red_odd {
+        background: linear-gradient(0, rgb(167, 20, 22) 30%, rgb(197, 50, 52) 70%);
+        border: 1px solid rgb(167, 20, 22);
+        color: #F8F8F8;
+        border-radius: 7px;
+        padding: 3px;
+    }
+    .btn_red_odd:hover {
+        background: linear-gradient(0, rgb(197, 50, 52) 30%, rgb(227, 80, 82) 70%);
+    }
+    .btn_red_odd:active {
+        background: linear-gradient(0, rgb(137, 0, 0) 30%, rgb(167, 20, 22) 70%);
+    }
+    .btn_green_odd {
+        background: linear-gradient(0, rgb(25, 83, 95) 30%, rgb(45, 103, 115) 70%);
+        color: #F8F8F8;
+        border-radius: 7px;
+        padding: 3px;
+    }
+    .btn_green_odd:hover {
+        background: linear-gradient(0, rgb(45, 103, 115) 30%, rgb(65, 123, 135) 70%);
+    }
+    .btn_green_odd:active {
+        background: linear-gradient(0, rgb(5, 63, 75) 30%, rgb(25, 83, 95) 70%);
+    }
+    .btn_orenge_odd {
+        background: linear-gradient(0, rgb(229, 100, 27) 30%, rgb(249, 120, 47) 70%);
+        color: #F8F8F8;
+        border-radius: 7px;
+        padding: 3px;
+    }
+    .btn_orenge_odd:hover {
+        background: linear-gradient(0, rgb(249, 120, 47) 30%, rgb(255, 140, 67) 70%);
+        color: #F8F8F8;
+        border-radius: 7px;
+        padding: 3px;
+    }
+    .btn_orenge_odd:active {
+        background: linear-gradient(0, rgb(209, 80, 7) 30%, rgb(229, 100, 27) 70%);
+        color: #F8F8F8;
+        border-radius: 7px;
+        padding: 3px;
+    }
+    /*.btn_green_odd {
+        background-color: rgb(82, 191, 135);
+        color: #F8F8F8;
+        border-radius: 7px;
+        padding: 3px;
+    }
+    .btn_green_odd:hover {
+        background-color: rgb(102, 211, 155);
+    }
+    .btn_green_odd:active {
+        background-color: rgb(62, 171, 115);
+    }*/
+    .btn_yellow_odd {
+        background-color: rgb(244, 173, 74);
+        color: #F8F8F8;
+        border-radius: 7px;
+        padding: 3px;
+    }
+    .btn_yellow_odd:hover {
+        background-color: rgb(255, 193, 94);
+    }
+    .btn_yellow_odd:active {
+        background-color: rgb(224, 153, 54);
+    }
+    .btn_file_odd {
+        width: 25px;
+    }
+    .btn_square_odd {
+        width: 180px;
+        height: 180px;
+        border: 0;
+        border-radius: 5px;
+        color: #F0F0F0;
+    }
+    .btn_break_odd {
+        width: 1em;
+        height: 1em;
+        line-height: .5em;
+        border-radius: .5em;
+        border: 0;
+    }
+    .btn_remove_odd {
+        width: 20px;
+        height: 20px;
+        margin: -10px -10px 0 0;
+        line-height: .5em;
+        border-radius: 12px;
+        border: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+    .btn_delete_odd {
+        width: 24px;
+        height: 24px;
+        padding: 2px 4.5px 8px 5.5px;
+        border-radius: 12px;
+        border: 0;
+        position: absolute;
+        right: -12px;
+        top: -12px;
+    }
+    div.btn_area_odd {
+        text-align: right;
+        float: right;
+    }
+    div.btn_place_odd {
+        text-align: right;
+        float: right;
+        margin-top: 10px;
+    }
+}
