@@ -9,7 +9,7 @@ DB_PATH = "data.db"
 if not os.path.exists(DB_PATH):
     conn = sqlite3.connect(DB_PATH)
     conn.execute("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT);")
-    conn.execute("INSERT INTO users (username, password) VALUES ('admin', 'admin123');")
+    conn.execute("INSERT INTO users (username, password) VALUES ('7348r43gfgo834gtf438fg48ft7', 'gfigfi43fiu3oifg3i4gf3gfu3gfi93');")
     conn.commit()
     conn.close()
 
