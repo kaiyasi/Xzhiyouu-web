@@ -14,20 +14,20 @@ def index():
         <title>Login Panel</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>
-          body {{
+          body {
             background-color: #f8f9fa;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-          }}
-          .card {{
+          }
+          .card {
             width: 100%;
             max-width: 400px;
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
-          }}
+          }
         </style>
       </head>
       <body>
