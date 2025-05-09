@@ -1,8 +1,9 @@
+import os
 from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-FLAG = "FLAG{ez_sql_injection}"
+FLAG = os.getenv("FLAG", "FLAG{default_flag}")  # 預設值防止本地測試時出錯
 
 @app.route("/", methods=["GET", "POST"])
 def index():
