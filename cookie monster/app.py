@@ -1,4 +1,4 @@
-from flask import Flask, request, make_response, redirect, render_template_string
+from flask import Flask, request, make_response, render_template_string
 import base64
 
 app = Flask(__name__)
@@ -19,25 +19,28 @@ TEMPLATE = '''
 @app.route("/")
 def index():
     cookie = request.cookies.get("user")
-    try:
-        decoded = base64.b64decode(cookie).decode()
-    except:
-        decoded = "guest"
+    resp = make_response()
 
-    is_admin = (decoded == "admin")
+    if not cookie:
+        default_user = "guest"
+        cookie_value = base64.b64encode(default_user.encode()).decode()
+        resp.set_cookie("user", cookie_value)
+        user = default_user
+    else:
+        try:
+            user = base64.b64decode(cookie).decode()
+        except:
+            user = "guest"
 
-    return render_template_string(
+    is_admin = (user == "admin")
+
+    rendered = render_template_string(
         TEMPLATE,
-        user=decoded,
+        user=user,
         admin=is_admin,
         flag=FLAG if is_admin else ""
     )
-
-@app.route("/login/<name>")
-def login(name):
-    resp = make_response(redirect("/"))
-    cookie_value = base64.b64encode(name.encode()).decode()
-    resp.set_cookie("user", cookie_value)
+    resp.set_data(rendered)
     return resp
 
 if __name__ == "__main__":
