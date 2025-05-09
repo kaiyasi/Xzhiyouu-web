@@ -36,22 +36,47 @@ def index():
             border-radius: 15px;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
           }
+          #magic-box {
+            display: none;
+            white-space: pre-wrap;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-family: monospace;
+          }
         </style>
+        <script>
+          function updateMagic() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const sql = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
+            document.getElementById('magic-box').textContent = sql;
+          }
+
+          function toggleMagic() {
+            const box = document.getElementById('magic-box');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+          }
+        </script>
       </head>
       <body>
         <div class="card">
           <h3 class="text-center mb-4">Login</h3>
-          <form method="POST">
+          <form method="POST" oninput="updateMagic()">
             <div class="mb-3">
               <label class="form-label">Username</label>
-              <input name="username" class="form-control" required>
+              <input id="username" name="username" class="form-control" required>
             </div>
             <div class="mb-3">
               <label class="form-label">Password</label>
-              <input name="password" class="form-control" type="password" required>
+              <input id="password" name="password" class="form-control" type="password" required>
             </div>
             <button type="submit" class="btn btn-primary w-100">Login</button>
           </form>
+          <button onclick="toggleMagic()" class="btn btn-secondary w-100 mt-2">Magic</button>
+          <div id="magic-box" class="mt-2"></div>
           {% if message %}
           <div class="alert alert-info mt-3 text-center">{{ message }}</div>
           {% endif %}
