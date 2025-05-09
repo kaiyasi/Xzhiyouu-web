@@ -5,21 +5,16 @@ app = Flask(__name__)
 
 FLAG = os.environ.get("FLAG", "FLAG{not_set}")
 
-user_data = {
-    "389": {"flag": FLAG}
-}
-
 @app.route("/user")
 def get_user():
     user_id = request.args.get("id")
-    user = user_data.get(user_id)
 
-    if user and "flag" in user:
+    if user_id == "389":
         return render_template_string("""
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Welcome</title>
+    <title>Access Granted</title>
     <style>
         body { font-family: Arial; background: #f2f2f2; padding: 50px; }
         .box {
@@ -50,6 +45,10 @@ def get_user():
     </div>
 </body>
 </html>
-        """, flag=user["flag"])
+        """, flag=FLAG)
 
     abort(404)
+
+@app.errorhandler(404)
+def not_found(e):
+    return "404 Not Found", 404
