@@ -1,9 +1,17 @@
 import os
+import sqlite3
 from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
+FLAG = os.getenv("FLAG", "FLAG{default_flag}")
 
-FLAG = os.getenv("FLAG", "FLAG{default_flag}")  # 預設值防止本地測試時出錯
+DB_PATH = "data.db"
+if not os.path.exists(DB_PATH):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT);")
+    conn.execute("INSERT INTO users (username, password) VALUES ('admin', 'admin123');")
+    conn.commit()
+    conn.close()
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -55,16 +63,16 @@ def index():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        import sqlite3
-        conn = sqlite3.connect(":memory:")
-        conn.execute("CREATE TABLE users (username TEXT, password TEXT);")
-        conn.execute("INSERT INTO users VALUES ('admin', 'admin123');")
+        conn = sqlite3.connect(DB_PATH)
         query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
-        cursor = conn.execute(query)
-        if cursor.fetchone():
-            message = FLAG
-        else:
-            message = "Login failed."
+        try:
+            cursor = conn.execute(query)
+            if cursor.fetchone():
+                message = FLAG
+            else:
+                message = "Login failed."
+        except Exception as e:
+            message = f"SQL Error: {e}"
     return render_template_string(html, message=message)
 
 if __name__ == "__main__":
