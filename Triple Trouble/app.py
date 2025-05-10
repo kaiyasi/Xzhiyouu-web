@@ -214,6 +214,8 @@ def secret():
      Hint: Try to GET the flag using curl!
     -->
     """
+with open("/etc/secrets/flag.txt") as f:
+    flag = f.read().strip()
 
 # 執行主程式
 if __name__ == "__main__":
