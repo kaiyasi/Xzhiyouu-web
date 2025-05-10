@@ -4,6 +4,12 @@ from flask import Flask, request, render_template_string, redirect, make_respons
 
 app = Flask(__name__)
 
+try:
+    with open("/etc/secrets/flag.txt") as f:
+        FLAG = f.read().strip()
+except Exception as e:
+    FLAG = f"Error loading flag: {e}"
+
 flag1 = os.getenv("FLAG1", "TkhJU0NDVEZ7ZGVmYXVsdDF9")
 flag2 = os.getenv("FLAG2", "TkhJU0NDVEZ7ZGVmYXVsdDJ9") 
 flag3 = os.getenv("FLAG3", "TkhJU0NDVEZ7ZGVmYXVsdDN9") 
@@ -214,8 +220,6 @@ def secret():
      Hint: Try to GET the flag using curl!
     -->
     """
-with open("/etc/secrets/flag.txt") as f:
-    flag = f.read().strip()
 
 # 執行主程式
 if __name__ == "__main__":
