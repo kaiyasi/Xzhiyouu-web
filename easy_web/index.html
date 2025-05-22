@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>flag在原始碼</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #fff;
+    }
+  </style>
+  <script>
+    document.addEventListener("keydown", function (e) {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) ||
+        (e.ctrlKey && e.key.toLowerCase() === "u")
+      ) {
+        e.preventDefault();
+        window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+        return false;
+      }
+    });
+
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+      return false;
+    });
+
+    let rickrolled = false;
+    const threshold = 160;
+
+    setInterval(function () {
+      const start = new Date();
+      debugger;
+      const end = new Date();
+      if (end - start > threshold && !rickrolled) {
+        rickrolled = true;
+        window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+      }
+    }, 1000);
+
+    let windowWidth = window.innerWidth;
+    let windowHeight = window.innerHeight;
+    
+    window.addEventListener('resize', function() {
+      if (window.innerWidth !== windowWidth || window.innerHeight !== windowHeight) {
+        window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+      }
+    });
+
+    document.onkeydown = function(e) {
+      if (e.ctrlKey && e.key === 'u') {
+        window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+        return false;
+      }
+      return true;
+    };
+    
+    (function() {
+      const consoleOverrides = ['log', 'debug', 'info', 'warn', 'error', 'dir', 'trace'];
+      consoleOverrides.forEach(function(method) {
+        console[method] = function() {
+          window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+        };
+      });
+    })();
+  </script>
+</head>
+<body>
+    <h1>flag 在原始碼裡</h1>
+    <!-- NHISCCTF{y0u_g07_r1ckr0ll3d} -->
+</body>
+</html>
