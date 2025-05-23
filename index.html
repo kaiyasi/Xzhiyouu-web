@@ -5,31 +5,193 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <script src="script.js"></script>
-    <title>Decode Tools</title>
+    <title>CTF Decode Tools</title>
     <link rel="icon" href="logo.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1><span class="title-text">Some Useful Decode Tools</span><span class="emoji-group">( •̀ ω •́ )✧<button onclick="showHint()" class="hint-btn">🤫</button></span></h1>
-        <select id="decodeMethod">
-            <option value="base64">Base64</option>
-            <option value="rot13">ROT13</option>
-            <option value="caesar">Caesar</option>
-            <option value="ascii">ASCII</option>
-            <option value="binary">Binary</option>
-            <option value="hex">Hexadecimal</option>
-            <option value="decimal">Decimal</option>
-            <option value="flag">flag</option>
-        </select>
-        <input type="text" id="input" placeholder="Input...">
-        <div id="caesarShift" style="display: none;">
-            <input type="number" id="shift" placeholder="Please enter the displacement amount" min="1" max="25" value="1">
-        </div>
-        <div class="button-group">
-            <button onclick="decode()" class="decode-btn">Decode</button>
-        </div>
-        <div class="output" id="output"></div>
-        <div class="author">Author: xzhiyouu</div>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo-section">
+                <img src="logo.ico" alt="Logo" class="app-logo">
+                <h1>CTF Decode Tools</h1>
+            </div>
+            <button onclick="showHint()" class="hint-btn" title="提示">
+                <i class="fas fa-lightbulb"></i>
+            </button>
+        </header>
+
+        <main class="main-content">
+            <div class="input-panel">
+                <div class="panel-header">
+                    <h2>輸入區域</h2>
+                    <div class="input-method-toggle">
+                        <label class="toggle">
+                            <input type="checkbox" id="inputMethod">
+                            <span class="slider"></span>
+                            <span class="toggle-label">檔案模式</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <div id="textInput" class="text-input-container">
+                        <textarea id="input" placeholder="在此輸入要解密的文字..."></textarea>
+                    </div>
+                    <div id="fileInput" class="file-input-container" style="display: none;">
+                        <div class="file-drop-zone">
+                            <i class="fas fa-file-upload"></i>
+                            <p>拖放檔案至此或點擊上傳</p>
+                            <input type="file" id="fileUpload" accept="text/*">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="decode-panel">
+                <div class="panel-header">
+                    <h2>解密選項</h2>
+                    <button class="select-all-btn" onclick="toggleAllMethods()">
+                        <i class="fas fa-check-double"></i>
+                        全選
+                    </button>
+                </div>
+
+                <div class="decode-options">
+                    <div class="options-grid">
+                        <div class="option-category">
+                            <h3>基礎編碼</h3>
+                            <div class="option-list">
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="base64">
+                                    <span>Base64</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="ascii">
+                                    <span>ASCII</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="binary">
+                                    <span>Binary</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="hex">
+                                    <span>Hexadecimal</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="decimal">
+                                    <span>Decimal</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="option-category">
+                            <h3>替換密碼</h3>
+                            <div class="option-list">
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="caesar">
+                                    <span>Caesar</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="rot13">
+                                    <span>ROT13</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="vigenere">
+                                    <span>Vigenère</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="atbash">
+                                    <span>Atbash</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="option-category">
+                            <h3>其他密碼</h3>
+                            <div class="option-list">
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="morse">
+                                    <span>Morse</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="railfence">
+                                    <span>Rail Fence</span>
+                                </label>
+                                <label class="option-item">
+                                    <input type="checkbox" name="decodeMethod" value="bacon">
+                                    <span>Bacon</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="decode-parameters">
+                        <div id="caesarRange" class="parameter-group" style="display: none;">
+                            <h3>Caesar 參數</h3>
+                            <div class="parameter-inputs">
+                                <div class="input-group">
+                                    <label for="shiftStart">起始位移</label>
+                                    <input type="number" id="shiftStart" min="1" max="25" value="1">
+                                </div>
+                                <div class="input-group">
+                                    <label for="shiftEnd">結束位移</label>
+                                    <input type="number" id="shiftEnd" min="1" max="25" value="25">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="vigenereKey" class="parameter-group" style="display: none;">
+                            <h3>Vigenère 參數</h3>
+                            <div class="parameter-inputs">
+                                <div class="input-group">
+                                    <label for="key">密鑰</label>
+                                    <input type="text" id="key" placeholder="輸入密鑰...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="railfenceRails" class="parameter-group" style="display: none;">
+                            <h3>Rail Fence 參數</h3>
+                            <div class="parameter-inputs">
+                                <div class="input-group">
+                                    <label for="rails">柵欄層數</label>
+                                    <input type="number" id="rails" min="2" max="10" value="3">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button onclick="decode()" class="primary-btn">
+                        <i class="fas fa-key"></i>
+                        解密
+                    </button>
+                    <button onclick="clearAll()" class="secondary-btn">
+                        <i class="fas fa-trash"></i>
+                        清除
+                    </button>
+                </div>
+            </div>
+
+            <div class="output-panel">
+                <div class="panel-header">
+                    <h2>解密結果</h2>
+                    <button onclick="copyToClipboard()" class="copy-btn" title="複製結果">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="output-area">
+                    <pre id="output"></pre>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <p>Created by xzhiyouu with ❤️</p>
+        </footer>
     </div>
 </body>
 </html>
