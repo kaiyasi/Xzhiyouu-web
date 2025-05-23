@@ -109,29 +109,43 @@ export class MorseDecoder {
       return '';
     }
 
-    // 檢查輸入是否已經包含標籤
-    if (morseCode.includes('摩斯密碼：') || morseCode.includes('解密結果：')) {
-      const lines = morseCode.split('\n');
-      for (const line of lines) {
-        if (line.startsWith('摩斯密碼：')) {
-          morseCode = line.replace('摩斯密碼：', '').trim();
-          break;
-        }
+    // 移除所有重複的標籤並提取內容
+    let decodedContent = '';
+    let morseContent = '';
+
+    // 分割行並處理每一行
+    const lines = morseCode.split('\n');
+    for (const line of lines) {
+      if (line.includes('解密結果：')) {
+        // 提取解密結果內容，移除所有"解密結果："標籤
+        const content = line.replace(/解密結果：/g, '').trim();
+        decodedContent = content;
+      } else if (line.includes('摩斯密碼：')) {
+        // 提取摩斯密碼內容，移除所有"摩斯密碼："標籤
+        const content = line.replace(/摩斯密碼：/g, '').trim();
+        morseContent = content;
       }
     }
 
-    // 清理輸入，移除多餘的空格
-    morseCode = morseCode.trim().replace(/\s+/g, ' ');
+    // 如果沒有找到標籤內容，則將整個輸入作為摩斯密碼處理
+    if (!decodedContent && !morseContent) {
+      morseContent = morseCode.trim();
+      // 清理輸入，移除多餘的空格
+      morseContent = morseContent.replace(/\s+/g, ' ');
 
-    // 解碼摩斯密碼
-    return morseCode
-      .split(' / ')
-      .map(word => 
-        word.split(' ')
-          .map(code => this.MORSE_DICT[code] || '?')
-          .join('')
-      )
-      .join(' ');
+      // 解碼摩斯密碼
+      decodedContent = morseContent
+        .split(' / ')
+        .map(word => 
+          word.split(' ')
+            .map(code => this.MORSE_DICT[code] || '?')
+            .join('')
+        )
+        .join(' ');
+    }
+
+    // 返回標準格式
+    return `解密結果：${decodedContent}\n摩斯密碼：${morseContent || morseCode.trim()}`;
   }
 
   /**
@@ -140,6 +154,21 @@ export class MorseDecoder {
    * @returns 摩斯密碼字符串
    */
   public static textToMorse(text: string): string {
+    if (!text || text.trim().length === 0) {
+      return '';
+    }
+
+    // 檢查輸入是否已經包含標籤
+    if (text.includes('摩斯密碼：') || text.includes('解密結果：')) {
+      const lines = text.split('\n');
+      for (const line of lines) {
+        if (line.startsWith('解密結果：')) {
+          text = line.replace('解密結果：', '').trim();
+          break;
+        }
+      }
+    }
+
     return text.toUpperCase()
       .split('')
       .map(char => {
