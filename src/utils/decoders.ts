@@ -1,9 +1,12 @@
 import { DecodeMethod, OperationType } from '../types';
+import MorseDecoder from './morse';
 
 interface DecoderOptions {
   key?: string;
   rails?: number;
   shift?: number;
+  a?: number;  // 添加仿射密碼參數
+  b?: number;  // 添加仿射密碼參數
 }
 
 interface MorseResult {
@@ -104,9 +107,18 @@ function decodeMorse(input: string): MorseResult {
     '..--.-': '_', '.-..-.': '"', '...-..-': '$', '.--.-.': '@', '...---...': 'SOS'
   };
 
-  // 清理輸入
-  const cleanedInput = input.trim();
+  // 清理輸入，移除多餘的空格
+  const cleanedInput = input.trim().replace(/\s+/g, ' ');
   
+  // 檢查輸入是否包含 "摩斯密碼：" 或 "解密結果："
+  if (cleanedInput.includes('摩斯密碼：') || cleanedInput.includes('解密結果：')) {
+    // 如果包含，直接返回原始輸入
+    return {
+      morseCode: cleanedInput,
+      decodedText: cleanedInput
+    };
+  }
+
   // 如果輸入是文字，轉換為摩斯密碼
   if (/^[A-Za-z0-9\s.,?!'"/()&:;=+\-_"$@]+$/.test(cleanedInput)) {
     const morseCode = cleanedInput.toUpperCase().split('').map(char => {
@@ -118,7 +130,7 @@ function decodeMorse(input: string): MorseResult {
     }).join(' ');
     
     return {
-      morseCode,
+      morseCode: morseCode,
       decodedText: cleanedInput.toUpperCase()
     };
   }
@@ -522,12 +534,30 @@ function decodeDNA(input: string): string {
   return codons.map(codon => dnaDict[codon] || '?').join('');
 }
 
-// 解碼函數映射
-const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOptions) => string } = {
+// 更新編碼器映射
+const encoders: { [key in DecodeMethod]?: (input: string, options?: DecoderOptions) => string } = {
+  base64: encodeBase64,
+  ascii: encodeAscii,
+  binary: encodeBinary,
+  hex: encodeHex,
+  decimal: encodeDecimal,
+  url: encodeUrl,
+  caesar: (input: string, options?: DecoderOptions) => decodeCaesar(input, 26 - (options?.shift || 13)),
+  rot13: (input: string) => decodeRot13(input),
+  morse: (input: string) => {
+    const result = MorseDecoder.textToMorse(input);
+    return `${input}\n${result}`;
+  },
+  aaencode: encodeAAencode,
+};
+
+// 更新解碼器映射
+const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOptions) => string | Promise<string> } = {
   base64: decodeBase64,
   base32: decodeBase32,
   base58: decodeBase58,
   base85: (input: string) => input, // TODO: 實現 Base85 解碼
+  base64image: (input: string) => input, // 添加 base64image 解碼器
   hex: decodeHex,
   binary: decodeBinary,
   ascii: decodeAscii,
@@ -544,9 +574,24 @@ const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOption
   pigpen: (input: string) => input, // TODO: 實現豬圈密碼解碼
   railfence: (input: string, options?: DecoderOptions) => decodeRailfence(input, options?.rails || 3),
   playfair: (input: string, options?: DecoderOptions) => decodePlayfair(input, options?.key || ''),
-  morse: (input: string) => {
-    const result = decodeMorse(input);
-    return `摩斯密碼：${result.morseCode}\n解密結果：${result.decodedText}`;
+  morse: async (input: string) => {
+    // 檢查輸入是否為空
+    if (!input || input.trim().length === 0) {
+      return '請輸入要解碼的摩斯密碼';
+    }
+
+    try {
+      // 如果輸入已經包含標籤，直接返回
+      if (input.includes('摩斯密碼：') || input.includes('解密結果：')) {
+        return input;
+      }
+
+      // 解碼摩斯密碼
+      const decodedText = MorseDecoder.decodeMorseCode(input);
+      return `解密結果：${decodedText}\n摩斯密碼：${input}`;
+    } catch (error) {
+      return `處理失敗：${error instanceof Error ? error.message : '未知錯誤'}`;
+    }
   },
   bacon: decodeBacon,
   polybius: decodePolybius,
@@ -580,23 +625,6 @@ const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOption
   phonetic: (input: string) => input, // TODO: 實現音標密碼解碼
   dna: decodeDNA,
   'hex-color': (input: string) => input, // TODO: 實現顏色代碼轉換
-};
-
-// 加密函數映射
-const encoders: { [key in DecodeMethod]: (input: string, options?: DecoderOptions) => string } = {
-  base64: encodeBase64,
-  ascii: encodeAscii,
-  binary: encodeBinary,
-  hex: encodeHex,
-  decimal: encodeDecimal,
-  url: encodeUrl,
-  caesar: (input: string, options?: DecoderOptions) => decodeCaesar(input, 26 - (options?.shift || 13)),
-  rot13: (input: string) => decodeRot13(input),
-  morse: (input: string) => {
-    const result = decodeMorse(input);
-    return `${result.decodedText}\n${result.morseCode}`;
-  },
-  aaencode: encodeAAencode,
 };
 
 // 解碼函數
