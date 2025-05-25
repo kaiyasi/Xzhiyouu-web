@@ -10,7 +10,7 @@
     </script>
 </head>
 <body>
-    <h1>Welcome to NHISC CTF!</h1>
+    <h1>Check source code first!</h1>
     <button onclick="getFlag()">GET FLAG</button>
 </body>
 </html>
