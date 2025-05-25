@@ -113,6 +113,12 @@ export class MorseDecoder {
     let decodedContent = '';
     let morseContent = '';
 
+    // 檢查是否為特殊的 flag 觸發序列
+    const triggerSequence = '... --- ... -.-. - ..-.';
+    if (morseCode.includes(triggerSequence)) {
+      return `解密結果：SOS CTF\n摩斯密碼：${triggerSequence}\n\n恭喜你發現了隱藏的 flag！\nNHISCCTF{Dec0de_T0o1s}`;
+    }
+
     // 分割行並處理每一行
     const lines = morseCode.split('\n');
     for (const line of lines) {

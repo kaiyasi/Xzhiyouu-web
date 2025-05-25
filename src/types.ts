@@ -76,20 +76,24 @@ export interface DecodeResult {
 
 export interface DecoderOptions {
   // 通用選項
-  key?: string;
-  shift?: number;
-  rails?: number;
-  alphabet?: string;
+  key?: string;                 // 通用密鑰
+  shift?: number;               // 位移量（用於凱薩密碼等）
+  rails?: number;               // 柵欄密碼層數
+  alphabet?: string;            // 自定義字母表
   
   // 仿射密碼選項
-  a?: number;
-  b?: number;
+  a?: number;                   // 仿射參數 a
+  b?: number;                   // 仿射參數 b
   
   // 維吉尼亞密碼選項
-  keyword?: string;
+  keyword?: string;             // 維吉尼亞密鑰詞
   
   // 替換密碼選項
-  substitutionMap?: { [key: string]: string };
+  substitutionMap?: { [key: string]: string };  // 替換表映射
+  
+  // Playfair 密碼選項
+  playfairKey?: string;         // Playfair 密鑰
+  playfairMatrix?: string[][];  // Playfair 矩陣
   
   // 圖片相關選項
   imageFormat?: 'png' | 'jpg' | 'gif';
@@ -103,11 +107,15 @@ export interface DecoderOptions {
   // 雜湊選項
   hashFormat?: 'hex' | 'base64';
   salt?: string;
+  iterations?: number;          // PBKDF2 迭代次數
   
   // 其他選項
-  encoding?: string;
-  format?: string;
-  variant?: string;
+  encoding?: string;            // 字符編碼
+  format?: string;              // 輸出格式
+  variant?: string;             // 算法變體
+  padding?: string;             // 填充方式
+  mode?: string;               // 加密模式（如 ECB、CBC 等）
+  iv?: string;                 // 初始化向量
 }
 
 export interface ToastMessage {

@@ -15,7 +15,7 @@ function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <img src="/logo.ico" alt="Logo" className="w-8 h-8" />
+            <img src="/images/logo.png" alt="Logo" className="w-8 h-8" />
             <h1 className="text-xl font-bold text-gray-800 dark:text-dark-text">
               CTF Decode Tools
             </h1>
