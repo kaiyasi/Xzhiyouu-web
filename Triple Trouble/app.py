@@ -163,7 +163,7 @@ def index():
 @app.route("/user")
 def user_page():
     user_id = request.args.get("id", "")
-    if user_id == "1056":
+    if user_id == "984":
         cookie_value = request.cookies.get("flag")
         if cookie_value == "1":
             content = f"""
