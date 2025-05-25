@@ -5,7 +5,7 @@
     <title>Get the Flag</title>
     <script>
         function getFlag() {
-            window.location.href = 'flag.php';
+            window.location.href = '/flag.php';
         }
     </script>
 </head>
