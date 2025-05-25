@@ -9,7 +9,7 @@ FLAG = os.environ.get("FLAG", "FLAG{not_set}")
 def get_user():
     user_id = request.args.get("id")
 
-    if user_id == "389":
+    if user_id == "754":
         return render_template_string("""
 <!DOCTYPE html>
 <html>
