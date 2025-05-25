@@ -42,7 +42,7 @@ def path_handler():
         buf.seek(0)
         return send_file(buf, mimetype='image/png')
 
-    if target == "flag":
+    if target.count("../") >= 6:
         # 回傳 flag 圖片
         img = Image.new("RGB", (480, 100), color=(255, 255, 255))
         draw = ImageDraw.Draw(img)
@@ -50,7 +50,7 @@ def path_handler():
             font = ImageFont.truetype("arial.ttf", 20)
         except:
             font = ImageFont.load_default()
-        draw.text((10, 40), f"Flag: {FLAG}", fill=(0, 0, 0), font=font)
+        draw.text((20, 40), f"Flag: {FLAG}", fill=(0, 0, 0), font=font)
 
         buf = BytesIO()
         img.save(buf, format='PNG')
