@@ -45,10 +45,10 @@ const keyConfigs: KeyConfig[] = [
   {
     method: 'caesar',
     label: '凱薩位移',
-    type: 'range',
+    placeholder: '請輸入位移量（1-25）',
+    type: 'number',
     min: 1,
     max: 25,
-    step: 1,
     description: '凱薩密碼的位移量（1-25）'
   },
   {
@@ -82,42 +82,27 @@ const KeyInputPanel: React.FC<KeyInputPanelProps> = ({ selectedMethods, onKeyCha
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="space-y-4 p-4 bg-gray-50 rounded-lg shadow-sm"
+      className="space-y-4 p-4 bg-gray-50 dark:bg-dark-hover rounded-lg shadow-sm"
     >
-      <h3 className="text-lg font-semibold text-gray-700">密鑰設定</h3>
+      <h3 className="text-lg font-semibold text-gray-700 dark:text-dark-text">密鑰設定</h3>
       <div className="grid gap-4 md:grid-cols-2">
         {relevantConfigs.map((config) => (
           <div key={config.method} className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text">
               {config.label}
-              <span className="ml-1 text-xs text-gray-500">
+              <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
                 ({config.description})
               </span>
             </label>
-            {config.type === 'range' ? (
-              <div className="flex items-center space-x-2">
-                <input
-                  type="range"
-                  min={config.min}
-                  max={config.max}
-                  step={config.step}
-                  className="w-full"
-                  onChange={(e) => onKeyChange(config.method, e.target.value)}
-                />
-                <span className="text-sm text-gray-600 w-8 text-center">
-                  {config.min}-{config.max}
-                </span>
-              </div>
-            ) : (
-              <input
-                type={config.type}
-                placeholder={config.placeholder}
-                min={config.min}
-                max={config.max}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                onChange={(e) => onKeyChange(config.method, e.target.value)}
-              />
-            )}
+            <input
+              type={config.type}
+              placeholder={config.placeholder}
+              min={config.min}
+              max={config.max}
+              step={config.step}
+              className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-dark-card dark:text-dark-text sm:text-sm"
+              onChange={(e) => onKeyChange(config.method, e.target.value)}
+            />
           </div>
         ))}
       </div>
