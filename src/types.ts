@@ -111,11 +111,16 @@ export interface DecoderOptions {
   
   // 其他選項
   encoding?: string;            // 字符編碼
-  format?: string;              // 輸出格式
-  variant?: string;             // 算法變體
-  padding?: string;             // 填充方式
+  format?: string;             // 輸出格式
+  variant?: string;            // 算法變體
+  padding?: string;            // 填充方式
   mode?: string;               // 加密模式（如 ECB、CBC 等）
   iv?: string;                 // 初始化向量
+}
+
+export interface MorseResult {
+  morseCode: string;
+  decodedText: string;
 }
 
 export interface ToastMessage {

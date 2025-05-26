@@ -1,18 +1,6 @@
-import { DecodeMethod, OperationType } from '../types';
+import { DecodeMethod, OperationType, DecoderOptions } from '../types';
 import MorseDecoder from './morse';
-
-interface DecoderOptions {
-  key?: string;
-  rails?: number;
-  shift?: number;
-  a?: number;  // 添加仿射密碼參數
-  b?: number;  // 添加仿射密碼參數
-}
-
-interface MorseResult {
-  morseCode: string;
-  decodedText: string;
-}
+import { KeyManager } from './keyManager';
 
 // 摩斯密碼音頻參數
 const MORSE_AUDIO_CONFIG = {
@@ -80,7 +68,7 @@ function decodeCaesar(input: string, shift: number = 13): string {
       const code = char.charCodeAt(0);
       const isUpperCase = code >= 65 && code <= 90;
       const base = isUpperCase ? 65 : 97;
-      return String.fromCharCode((code - base + (26 - shift)) % 26 + base);
+      return String.fromCharCode((code - base - shift + 26) % 26 + base);
     }
     return char;
   }).join('');
@@ -199,7 +187,11 @@ function encodeAAencode(input: string): string {
 
 // 其他解碼函數
 function decodeBase64(input: string): string {
-  return atob(input);
+  try {
+    return atob(input);
+  } catch {
+    throw new Error('無效的 Base64 編碼');
+  }
 }
 
 function encodeBase64(input: string): string {
@@ -426,38 +418,7 @@ function decodeRailfence(input: string, rails: number): string {
 
 // Playfair 密碼
 function decodePlayfair(input: string, key: string): string {
-  // 生成 5x5 方陣
-  const alphabet = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'; // 注意：I/J 合併
-  const matrix = Array(5).fill('').map(() => Array(5).fill(''));
-  const used = new Set();
-  let row = 0, col = 0;
-  
-  // 填充密鑰
-  for (const char of key.toUpperCase().replace(/J/g, 'I')) {
-    if (!used.has(char) && alphabet.includes(char)) {
-      matrix[row][col] = char;
-      used.add(char);
-      col++;
-      if (col === 5) {
-        col = 0;
-        row++;
-      }
-    }
-  }
-  
-  // 填充剩餘字母
-  for (const char of alphabet) {
-    if (!used.has(char)) {
-      matrix[row][col] = char;
-      col++;
-      if (col === 5) {
-        col = 0;
-        row++;
-      }
-    }
-  }
-  
-  // 解密
+  const matrix = KeyManager.generatePlayfairMatrix(key);
   const pairs = input.match(/.{2}/g) || [];
   let result = '';
   
@@ -534,59 +495,112 @@ function decodeDNA(input: string): string {
   return codons.map(codon => dnaDict[codon] || '?').join('');
 }
 
+// 替換密碼解碼
+function decodeSubstitution(input: string, substitutionMap: { [key: string]: string }): string {
+  return input.toUpperCase().split('').map(char => {
+    if (char.match(/[A-Z]/)) {
+      return substitutionMap[char] || char;
+    }
+    return char;
+  }).join('');
+}
+
 // 更新編碼器映射
 const encoders: { [key in DecodeMethod]?: (input: string, options?: DecoderOptions) => string } = {
-  base64: encodeBase64,
-  ascii: encodeAscii,
-  binary: encodeBinary,
-  hex: encodeHex,
-  decimal: encodeDecimal,
-  url: encodeUrl,
-  caesar: (input: string, options?: DecoderOptions) => decodeCaesar(input, 26 - (options?.shift || 13)),
-  rot13: (input: string) => decodeRot13(input),
+  base64: (input: string) => btoa(input),
+  ascii: (input: string) => input, // TODO
+  binary: (input: string) => input, // TODO
+  hex: (input: string) => input, // TODO
+  decimal: (input: string) => input, // TODO
+  url: encodeURIComponent,
+  caesar: (input: string, options?: DecoderOptions) => {
+    const validation = KeyManager.validateKey('caesar', options || {});
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+    return decodeCaesar(input, 26 - (options?.shift || 13));
+  },
+  rot13: (input: string) => decodeCaesar(input, 13),
   morse: (input: string) => {
     const result = MorseDecoder.textToMorse(input);
     return `${input}\n${result}`;
   },
-  aaencode: encodeAAencode,
 };
 
 // 更新解碼器映射
 const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOptions) => string | Promise<string> } = {
+  // 基礎編碼
   base64: decodeBase64,
   base32: decodeBase32,
-  base58: decodeBase58,
-  base85: (input: string) => input, // TODO: 實現 Base85 解碼
-  base64image: (input: string) => input, // 添加 base64image 解碼器
-  hex: decodeHex,
-  binary: decodeBinary,
-  ascii: decodeAscii,
-  decimal: decodeDecimal,
+  base58: (input: string) => input, // TODO
+  base85: (input: string) => input, // TODO
+  hex: (input: string) => input, // TODO
+  binary: (input: string) => input, // TODO
+  ascii: (input: string) => input, // TODO
+  decimal: (input: string) => input, // TODO
   url: decodeUrl,
-  unicode: (input: string) => input, // TODO: 實現 Unicode 解碼
-  utf8: (input: string) => input, // TODO: 實現 UTF-8 解碼
-  caesar: (input: string, options?: DecoderOptions) => decodeCaesar(input, options?.shift),
+  unicode: (input: string) => input, // TODO
+  utf8: (input: string) => input, // TODO
+  base64image: (input: string) => input, // TODO
+
+  // 替換密碼
+  caesar: (input: string, options?: DecoderOptions) => {
+    const validation = KeyManager.validateKey('caesar', options || {});
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+    return decodeCaesar(input, options?.shift);
+  },
   rot13: decodeRot13,
-  atbash: decodeAtbash,
-  vigenere: (input: string, options?: DecoderOptions) => decodeVigenere(input, options?.key || ''),
-  substitution: (input: string) => input, // TODO: 實現替換密碼解碼
-  affine: (input: string, options?: DecoderOptions) => decodeAffine(input, options?.a || 1, options?.b || 0),
-  pigpen: (input: string) => input, // TODO: 實現豬圈密碼解碼
-  railfence: (input: string, options?: DecoderOptions) => decodeRailfence(input, options?.rails || 3),
-  playfair: (input: string, options?: DecoderOptions) => decodePlayfair(input, options?.key || ''),
+  atbash: (input: string) => input, // TODO
+  vigenere: (input: string, options?: DecoderOptions) => {
+    const validation = KeyManager.validateKey('vigenere', options || {});
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+    return decodeVigenere(input, options?.key || '');
+  },
+  substitution: (input: string, options?: DecoderOptions) => {
+    const validation = KeyManager.validateKey('substitution', options || {});
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+    return decodeSubstitution(input, options?.substitutionMap || {});
+  },
+  affine: (input: string, options?: DecoderOptions) => {
+    const validation = KeyManager.validateKey('affine', options || {});
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+    return decodeAffine(input, options?.a || 1, options?.b || 0);
+  },
+  pigpen: (input: string) => input, // TODO
+  railfence: (input: string, options?: DecoderOptions) => {
+    const validation = KeyManager.validateKey('railfence', options || {});
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+    return decodeRailfence(input, options?.rails || 3);
+  },
+  playfair: (input: string, options?: DecoderOptions) => {
+    const validation = KeyManager.validateKey('playfair', options || {});
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+    return decodePlayfair(input, options?.playfairKey || '');
+  },
+
+  // 其他解碼器...
   morse: async (input: string) => {
-    // 檢查輸入是否為空
     if (!input || input.trim().length === 0) {
       return '請輸入要解碼的摩斯密碼';
     }
 
     try {
-      // 如果輸入已經包含標籤，直接返回
       if (input.includes('摩斯密碼：') || input.includes('解密結果：')) {
         return input;
       }
 
-      // 解碼摩斯密碼
       const decodedText = MorseDecoder.decodeMorseCode(input);
       return `解密結果：${decodedText}\n摩斯密碼：${input}`;
     } catch (error) {
