@@ -4,8 +4,9 @@ import Header from './components/Header';
 import InputPanel from './components/InputPanel';
 import DecodePanel from './components/DecodePanel';
 import OutputPanel from './components/OutputPanel';
+import KeyInputPanel from './components/KeyInputPanel';
 import ThemeToggle from './components/ThemeToggle';
-import { DecodeMethod, DecodeResult, OperationType } from './types';
+import { DecodeMethod, DecodeResult, OperationType, DecoderOptions } from './types';
 import { decodeWithMethod } from './utils/decoders';
 
 function App() {
@@ -14,6 +15,14 @@ function App() {
   const [results, setResults] = useState<DecodeResult[]>([]);
   const [isDecoding, setIsDecoding] = useState(false);
   const [operationType, setOperationType] = useState<OperationType>('decode');
+  const [decoderOptions, setDecoderOptions] = useState<DecoderOptions>({});
+
+  const handleKeyChange = (method: DecodeMethod, key: string) => {
+    setDecoderOptions(prev => ({
+      ...prev,
+      [method]: key
+    }));
+  };
 
   const handleDecode = async () => {
     if (!input.trim() && selectedMethods.every(m => m !== 'morse')) {
@@ -31,7 +40,7 @@ function App() {
 
     for (const method of selectedMethods) {
       try {
-        const result = await decodeWithMethod(method, input, {}, operationType);
+        const result = await decodeWithMethod(method, input, decoderOptions, operationType);
         newResults.push({
           method,
           result,
@@ -147,6 +156,7 @@ function App() {
     setInput('');
     setSelectedMethods([]);
     setResults([]);
+    setDecoderOptions({});
     showToast('已清除所有內容！');
   };
 
@@ -181,6 +191,20 @@ function App() {
               operationType={operationType}
               onOperationTypeChange={setOperationType}
             />
+            {selectedMethods.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="mt-4"
+              >
+                <KeyInputPanel
+                  selectedMethods={selectedMethods}
+                  onKeyChange={handleKeyChange}
+                />
+              </motion.div>
+            )}
           </motion.div>
         </div>
 
