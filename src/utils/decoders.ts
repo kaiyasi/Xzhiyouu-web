@@ -597,12 +597,14 @@ const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOption
     }
 
     try {
-      if (input.includes('摩斯密碼：') || input.includes('解密結果：')) {
+      const lines = input.split('\n');
+      if (lines.length === 2) {
+        // 如果已經是格式化的輸出，直接返回
         return input;
       }
 
       const decodedText = MorseDecoder.decodeMorseCode(input);
-      return `解密結果：${decodedText}\n摩斯密碼：${input}`;
+      return `${decodedText}\n${input}`;
     } catch (error) {
       return `處理失敗：${error instanceof Error ? error.message : '未知錯誤'}`;
     }
