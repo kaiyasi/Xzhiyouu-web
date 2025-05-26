@@ -88,8 +88,15 @@ export class KeyManager {
    * @param b 第二個數
    * @returns 是否互質
    */
-  private static isCoprime(a: number, b: number): boolean {
-    const gcd = (x: number, y: number): number => y === 0 ? x : gcd(y, x % y);
+  public static isCoprime(a: number, b: number): boolean {
+    const gcd = (x: number, y: number): number => {
+      while (y !== 0) {
+        const temp = y;
+        y = x % y;
+        x = temp;
+      }
+      return x;
+    };
     return gcd(a, b) === 1;
   }
 

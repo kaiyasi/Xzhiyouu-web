@@ -18,10 +18,37 @@ function App() {
   const [decoderOptions, setDecoderOptions] = useState<DecoderOptions>({});
 
   const handleKeyChange = (method: DecodeMethod, key: string) => {
-    setDecoderOptions(prev => ({
-      ...prev,
-      [method]: key
-    }));
+    setDecoderOptions(prev => {
+      const newOptions = { ...prev };
+      
+      switch (method) {
+        case 'vigenere':
+          newOptions.key = key;
+          break;
+        case 'playfair':
+          newOptions.playfairKey = key;
+          break;
+        case 'railfence':
+          newOptions.rails = parseInt(key, 10);
+          break;
+        case 'caesar':
+          newOptions.shift = parseInt(key, 10);
+          break;
+        case 'affine':
+          // 假設 key 格式為 "a,b"
+          const [a, b] = key.split(',').map(n => parseInt(n.trim(), 10));
+          newOptions.a = a;
+          newOptions.b = b;
+          break;
+        case 'substitution':
+          // 解析替換表字符串為映射對象
+          const pairs = key.split(',').map(pair => pair.trim().split('='));
+          newOptions.substitutionMap = Object.fromEntries(pairs);
+          break;
+      }
+      
+      return newOptions;
+    });
   };
 
   const handleDecode = async () => {
