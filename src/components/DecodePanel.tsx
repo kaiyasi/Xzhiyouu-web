@@ -135,7 +135,6 @@ function DecodePanel({
   onOperationTypeChange,
 }: DecodePanelProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [caesarRange, setCaesarRange] = useState<[number, number]>([1, 25]);
   const [hoveredMethod, setHoveredMethod] = useState<DecodeMethod | null>(null);
 
   const toggleMethod = (method: DecodeMethod) => {
@@ -257,7 +256,7 @@ function DecodePanel({
                         onHoverStart={() => setHoveredMethod(method.value)}
                         onHoverEnd={() => setHoveredMethod(null)}
                       >
-                        <label className="relative flex items-center p-3 rounded-lg cursor-pointer border-2 transition-all hover:shadow-md dark:hover:shadow-none">
+                        <label className="relative flex items-center cursor-pointer">
                           <input
                             type="checkbox"
                             className="absolute opacity-0"
@@ -293,35 +292,6 @@ function DecodePanel({
                       </motion.div>
                     ))}
                   </div>
-
-                  {category.category === '替換密碼' && (
-                    <div className="px-4 pb-4">
-                      <div className="p-3 bg-gray-50 dark:bg-dark-hover rounded-lg">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-dark-text mb-2">
-                          Caesar 密碼範圍
-                        </label>
-                        <div className="flex items-center space-x-4">
-                          <input
-                            type="number"
-                            min="1"
-                            max="25"
-                            value={caesarRange[0]}
-                            onChange={(e) => setCaesarRange([parseInt(e.target.value), caesarRange[1]])}
-                            className="w-20 px-2 py-1 text-center border border-gray-300 dark:border-gray-600 rounded-md dark:bg-dark-card dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
-                          />
-                          <span className="text-gray-500 dark:text-gray-400">到</span>
-                          <input
-                            type="number"
-                            min="1"
-                            max="25"
-                            value={caesarRange[1]}
-                            onChange={(e) => setCaesarRange([caesarRange[0], parseInt(e.target.value)])}
-                            className="w-20 px-2 py-1 text-center border border-gray-300 dark:border-gray-600 rounded-md dark:bg-dark-card dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </motion.div>
               )}
             </AnimatePresence>
