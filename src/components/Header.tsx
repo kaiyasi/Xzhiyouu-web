@@ -1,9 +1,17 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import MorseDecoder from '../utils/morse';
 
 function Header() {
   const [isHintVisible, setIsHintVisible] = useState(false);
+
+  const handleLogoClick = () => {
+    const triggerSequence = '... --- ... -.-. - ..-.';
+    const result = MorseDecoder.decodeMorseCode(triggerSequence);
+    if (result.includes('NHISCCTF')) {
+      alert('恭喜你發現了隱藏的 flag！\n' + result.split('\n').pop());
+    }
+  };
 
   return (
     <motion.header
@@ -14,8 +22,8 @@ function Header() {
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <img src="/images/logo.png" alt="Logo" className="w-8 h-8" />
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={handleLogoClick}>
+            <img src="/logo.ico" alt="Logo" className="w-8 h-8 object-contain" />
             <h1 className="text-xl font-bold text-gray-800 dark:text-dark-text">
               CTF Decode Tools
             </h1>
