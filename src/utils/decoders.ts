@@ -97,6 +97,28 @@ function decodeMorse(input: string): MorseResult {
 
   // 清理輸入，移除多餘的空格
   const cleanedInput = input.trim().replace(/\s+/g, ' ');
+
+  // 檢查是否為特殊的 flag 觸發序列
+  const triggerSequences = [
+    '... --- ... -.-. - ..-.', // SOS CTF
+    '.... .. -.. -.. . -. ..-. .-.. .- --.', // HIDDEN FLAG
+    '... . -.-. .-. . -', // SECRET
+    '..-. .-.. .- --. ..-. --- ..- -. -..' // FLAG FOUND
+  ];
+
+  // 檢查是否包含任何觸發序列
+  for (const sequence of triggerSequences) {
+    if (cleanedInput.includes(sequence)) {
+      const decodedSequence = sequence
+        .split(' ')
+        .map(code => morseDict[code] || '?')
+        .join('');
+      return {
+        morseCode: sequence,
+        decodedText: `${decodedSequence}\n\n恭喜你發現了隱藏的 flag！\nNHISCCTF{M0rs3_D3c0d3r_Pr0}`
+      };
+    }
+  }
   
   // 檢查輸入是否包含 "摩斯密碼：" 或 "解密結果："
   if (cleanedInput.includes('摩斯密碼：') || cleanedInput.includes('解密結果：')) {
