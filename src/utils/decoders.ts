@@ -100,11 +100,24 @@ function decodeMorse(input: string): MorseResult {
   
   // 檢查輸入是否包含 "摩斯密碼：" 或 "解密結果："
   if (cleanedInput.includes('摩斯密碼：') || cleanedInput.includes('解密結果：')) {
-    // 如果包含，直接返回原始輸入
-    return {
-      morseCode: cleanedInput,
-      decodedText: cleanedInput
-    };
+    const lines = cleanedInput.split('\n');
+    let morseCode = '';
+    let decodedText = '';
+    
+    for (const line of lines) {
+      if (line.startsWith('摩斯密碼：')) {
+        morseCode = line.replace('摩斯密碼：', '').trim();
+      } else if (line.startsWith('解密結果：')) {
+        decodedText = line.replace('解密結果：', '').trim();
+      }
+    }
+    
+    if (!morseCode && !decodedText) {
+      morseCode = cleanedInput;
+      decodedText = cleanedInput;
+    }
+    
+    return { morseCode, decodedText };
   }
 
   // 如果輸入是文字，轉換為摩斯密碼
@@ -118,7 +131,7 @@ function decodeMorse(input: string): MorseResult {
     }).join(' ');
     
     return {
-      morseCode: morseCode,
+      morseCode,
       decodedText: cleanedInput.toUpperCase()
     };
   }
@@ -131,7 +144,7 @@ function decodeMorse(input: string): MorseResult {
 
   return {
     morseCode: cleanedInput,
-    decodedText: decodedText
+    decodedText
   };
 }
 
@@ -198,54 +211,109 @@ function encodeBase64(input: string): string {
   return btoa(input);
 }
 
-function decodeAscii(input: string): string {
-  return input.split(' ')
-    .map(num => String.fromCharCode(parseInt(num)))
-    .join('');
+interface MorseResult {
+  morseCode: string;
+  decodedText: string;
 }
 
-function encodeAscii(input: string): string {
-  return input.split('')
-    .map(char => char.charCodeAt(0).toString())
-    .join(' ');
-}
-
-function decodeBinary(input: string): string {
-  return input.split(' ')
-    .map(bin => String.fromCharCode(parseInt(bin, 2)))
-    .join('');
-}
-
-function encodeBinary(input: string): string {
-  return input.split('')
-    .map(char => char.charCodeAt(0).toString(2).padStart(8, '0'))
-    .join(' ');
-}
-
+// 十六進制解碼
 function decodeHex(input: string): string {
-  return input.split(' ')
-    .map(hex => String.fromCharCode(parseInt(hex, 16)))
-    .join('');
+  try {
+    input = input.replace(/\s/g, '');
+    let result = '';
+    for (let i = 0; i < input.length; i += 2) {
+      result += String.fromCharCode(parseInt(input.substr(i, 2), 16));
+    }
+    return result;
+  } catch {
+    throw new Error('無效的十六進制編碼');
+  }
 }
 
-function encodeHex(input: string): string {
-  return input.split('')
-    .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
-    .join(' ');
+// 二進制解碼
+function decodeBinary(input: string): string {
+  try {
+    return input.split(' ')
+      .map(bin => String.fromCharCode(parseInt(bin, 2)))
+      .join('');
+  } catch {
+    throw new Error('無效的二進制編碼');
+  }
 }
 
+// ASCII 解碼
+function decodeAscii(input: string): string {
+  try {
+    return input.split(' ')
+      .map(code => String.fromCharCode(parseInt(code)))
+      .join('');
+  } catch {
+    throw new Error('無效的 ASCII 編碼');
+  }
+}
+
+// 十進制解碼
 function decodeDecimal(input: string): string {
-  return input.split(' ')
-    .map(num => String.fromCharCode(parseInt(num, 10)))
-    .join('');
+  try {
+    return input.split(' ')
+      .map(num => String.fromCharCode(parseInt(num)))
+      .join('');
+  } catch {
+    throw new Error('無效的十進制編碼');
+  }
 }
 
-function encodeDecimal(input: string): string {
-  return input.split('')
-    .map(char => char.charCodeAt(0).toString(10))
-    .join(' ');
+// Base58 解碼
+function decodeBase58(input: string): string {
+  const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  const BASE = ALPHABET.length;
+  
+  let decoded = 0n;
+  for (const char of input) {
+    decoded = decoded * BigInt(BASE) + BigInt(ALPHABET.indexOf(char));
+  }
+  
+  let result = '';
+  while (decoded > 0n) {
+    result = String.fromCharCode(Number(decoded & 0xFFn)) + result;
+    decoded = decoded >> 8n;
+  }
+  
+  // 處理前導零
+  for (let i = 0; i < input.length && input[i] === '1'; i++) {
+    result = '\0' + result;
+  }
+  
+  return result;
 }
 
+// Base85 解碼
+function decodeBase85(input: string): string {
+  const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~";
+  
+  try {
+    let result = '';
+    for (let i = 0; i < input.length; i += 5) {
+      let value = 0;
+      for (let j = 0; j < 5; j++) {
+        if (i + j < input.length) {
+          value = value * 85 + ALPHABET.indexOf(input[i + j]);
+        }
+      }
+      
+      for (let j = 3; j >= 0; j--) {
+        if (result.length < Math.ceil((input.length * 4) / 5)) {
+          result = String.fromCharCode((value >> (j * 8)) & 0xFF) + result;
+        }
+      }
+    }
+    return result;
+  } catch {
+    throw new Error('無效的 Base85 編碼');
+  }
+}
+
+// 其他解碼函數
 function decodeUrl(input: string): string {
   return decodeURIComponent(input);
 }
@@ -266,17 +334,46 @@ function decodeBase32(input: string): string {
   return bytes.map(byte => String.fromCharCode(parseInt(byte, 2))).join('');
 }
 
-// Base58 解碼
-function decodeBase58(input: string): string {
-  const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-  let n = 0n;
-  for (const char of input) {
-    n = n * 58n + BigInt(ALPHABET.indexOf(char));
+// Unicode 解碼
+function decodeUnicode(input: string): string {
+  try {
+    return input.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => 
+      String.fromCharCode(parseInt(hex, 16))
+    );
+  } catch {
+    throw new Error('無效的 Unicode 編碼');
   }
-  return n.toString(16).match(/.{2}/g)?.map(hex => String.fromCharCode(parseInt(hex, 16))).join('') || '';
 }
 
-// Atbash 密碼
+// UTF-8 解碼
+function decodeUTF8(input: string): string {
+  try {
+    // 處理十六進制格式
+    if (input.includes('\\x')) {
+      return input.replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) => 
+        String.fromCharCode(parseInt(hex, 16))
+      );
+    }
+    
+    // 處理 URL 編碼格式
+    if (input.includes('%')) {
+      return decodeURIComponent(input);
+    }
+    
+    // 處理二進制格式
+    if (/^[01\s]+$/.test(input)) {
+      return input.split(' ')
+        .map(byte => String.fromCharCode(parseInt(byte, 2)))
+        .join('');
+    }
+    
+    throw new Error('不支援的 UTF-8 編碼格式');
+  } catch {
+    throw new Error('無效的 UTF-8 編碼');
+  }
+}
+
+// Atbash 密碼解碼
 function decodeAtbash(input: string): string {
   return input.split('').map(char => {
     if (char.match(/[A-Z]/)) {
@@ -532,15 +629,15 @@ const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOption
   // 基礎編碼
   base64: decodeBase64,
   base32: decodeBase32,
-  base58: (input: string) => input, // TODO
-  base85: (input: string) => input, // TODO
-  hex: (input: string) => input, // TODO
-  binary: (input: string) => input, // TODO
-  ascii: (input: string) => input, // TODO
-  decimal: (input: string) => input, // TODO
+  base58: decodeBase58,
+  base85: decodeBase85,
+  hex: decodeHex,
+  binary: decodeBinary,
+  ascii: decodeAscii,
+  decimal: decodeDecimal,
   url: decodeUrl,
-  unicode: (input: string) => input, // TODO
-  utf8: (input: string) => input, // TODO
+  unicode: decodeUnicode,
+  utf8: decodeUTF8,
   base64image: (input: string) => input, // TODO
 
   // 替換密碼
@@ -552,7 +649,7 @@ const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOption
     return decodeCaesar(input, options?.shift);
   },
   rot13: decodeRot13,
-  atbash: (input: string) => input, // TODO
+  atbash: decodeAtbash,
   vigenere: (input: string, options?: DecoderOptions) => {
     const validation = KeyManager.validateKey('vigenere', options || {});
     if (!validation.isValid) {
@@ -592,22 +689,8 @@ const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOption
 
   // 其他解碼器...
   morse: async (input: string) => {
-    if (!input || input.trim().length === 0) {
-      return '請輸入要解碼的摩斯密碼';
-    }
-
-    try {
-      const lines = input.split('\n');
-      if (lines.length === 2) {
-        // 如果已經是格式化的輸出，直接返回
-        return input;
-      }
-
-      const decodedText = MorseDecoder.decodeMorseCode(input);
-      return `${decodedText}\n${input}`;
-    } catch (error) {
-      return `處理失敗：${error instanceof Error ? error.message : '未知錯誤'}`;
-    }
+    const result = decodeMorse(input);
+    return `解密結果：${result.decodedText}\n摩斯密碼：${result.morseCode}`;
   },
   bacon: decodeBacon,
   polybius: decodePolybius,
@@ -666,4 +749,6 @@ export async function decodeWithMethod(
 }
 
 // 移除重複的導出
+// export { generateMorseAudio }; 
+// export { generateMorseAudio }; 
 // export { generateMorseAudio }; 
