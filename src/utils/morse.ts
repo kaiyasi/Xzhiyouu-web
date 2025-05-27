@@ -114,9 +114,24 @@ export class MorseDecoder {
     let morseContent = '';
 
     // 檢查是否為特殊的 flag 觸發序列
-    const triggerSequence = '... --- ... -.-. - ..-.';
-    if (morseCode.includes(triggerSequence)) {
-      return `解密結果：SOS CTF\n摩斯密碼：${triggerSequence}\n\n恭喜你發現了隱藏的 flag！\nNHISCCTF{Dec0de_T0o1s}`;
+    const triggerSequences = [
+      '... --- ... -.-. - ..-.', // SOS CTF
+      '.... .. -.. -.. . -. ..-. .-.. .- --.', // HIDDEN FLAG
+      '... . -.-. .-. . -', // SECRET
+    ];
+
+    // 清理輸入的摩斯密碼
+    const cleanedMorseCode = morseCode.trim().replace(/\s+/g, ' ');
+
+    // 檢查是否包含任何觸發序列
+    for (const sequence of triggerSequences) {
+      if (cleanedMorseCode.includes(sequence)) {
+        const decodedSequence = sequence
+          .split(' ')
+          .map(code => this.MORSE_DICT[code] || '?')
+          .join('');
+        return `解密結果：${decodedSequence}\n摩斯密碼：${sequence}\n\n恭喜你發現了隱藏的 flag！\nNHISCCTF{M0rs3_D3c0d3r_Pr0}`;
+      }
     }
 
     // 分割行並處理每一行
