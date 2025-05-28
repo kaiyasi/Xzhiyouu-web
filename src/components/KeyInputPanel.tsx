@@ -162,8 +162,8 @@ const KeyInputPanel: React.FC<KeyInputPanelProps> = ({ selectedMethods, onKeyCha
   };
 
   return (
-    <div className="space-y-4 p-4 bg-white dark:bg-dark-card rounded-lg shadow-sm">
-      <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-dark-text">密鑰設置</h2>
+    <div className="space-y-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+      <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-100">密鑰設置</h2>
       {selectedMethods.map(method => {
         const config = keyConfigs.find(c => c.method === method);
         if (!config) return null;
@@ -176,9 +176,9 @@ const KeyInputPanel: React.FC<KeyInputPanelProps> = ({ selectedMethods, onKeyCha
             exit={{ opacity: 0, y: -10 }}
             className="space-y-2"
           >
-            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
               {config.label}
-              <div className="text-xs text-gray-500 dark:text-dark-text-secondary">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 {config.description}
               </div>
             </label>
@@ -192,14 +192,19 @@ const KeyInputPanel: React.FC<KeyInputPanelProps> = ({ selectedMethods, onKeyCha
                 value={keys[method] || ''}
                 onChange={(e) => handleKeyInput(method, e.target.value)}
                 className={`flex-1 px-3 py-2 border rounded-md text-sm
-                  ${errors[method] ? 'border-red-500' : 'border-gray-300'}
-                  dark:bg-dark-input dark:border-dark-border dark:text-dark-text
-                  focus:outline-none focus:ring-2 focus:ring-primary-500`}
+                  ${errors[method] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+                  bg-white dark:bg-gray-700
+                  text-gray-900 dark:text-gray-100
+                  placeholder-gray-500 dark:placeholder-gray-400
+                  focus:outline-none focus:ring-2 focus:ring-primary-500
+                  dark:focus:ring-primary-400`}
               />
               <button
                 onClick={() => handleRandomKey(method)}
                 className="px-3 py-2 bg-primary-500 text-white rounded-md text-sm
-                  hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  hover:bg-primary-600 dark:hover:bg-primary-400
+                  focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400
+                  transition-colors duration-200"
               >
                 隨機
               </button>
@@ -208,7 +213,7 @@ const KeyInputPanel: React.FC<KeyInputPanelProps> = ({ selectedMethods, onKeyCha
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-sm text-red-500"
+                className="text-sm text-red-500 dark:text-red-400"
               >
                 {errors[method]}
               </motion.p>
