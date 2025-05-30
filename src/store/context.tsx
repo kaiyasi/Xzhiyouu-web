@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AppState, AppAction } from './types';
 import { reducer, initialState } from './reducer';
+import { Decoder } from '../utils/Decoder';
+import { DecodeMethod } from '../types';
 
 const AppStateContext = createContext<AppState | undefined>(undefined);
 const AppDispatchContext = createContext<React.Dispatch<AppAction> | undefined>(undefined);
@@ -149,7 +151,16 @@ async function decodeWithMethod(
   options: any,
   operationType: 'encode' | 'decode'
 ): Promise<string> {
-  // 這裡需要實現實際的解碼邏輯
-  // 可以從現有的 decoders.ts 中導入相關函數
-  return Promise.resolve('TODO: Implement actual decoding');
+  if (operationType === 'encode') {
+    throw new Error('加密功能尚未實現');
+  }
+
+  const decoder = Decoder.getInstance();
+  const result = await decoder.decode(input, method as DecodeMethod, options);
+  
+  if (result.status === 'error') {
+    throw new Error(result.result);
+  }
+  
+  return result.result;
 } 
