@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { DecodeMethod } from '../types';
+import { DecodeMethod, DecoderOptions } from '../types';
 import { motion } from 'framer-motion';
 import { KeyManager } from '../utils/keyManager';
 
 interface KeyInputPanelProps {
   selectedMethods: DecodeMethod[];
   onKeyChange: (method: DecodeMethod, key: string) => void;
+  onOptionsChange?: (method: DecodeMethod, options: DecoderOptions) => void;
+  options?: DecoderOptions;
 }
 
 interface KeyConfig {
@@ -17,7 +19,8 @@ interface KeyConfig {
   max?: number;
   step?: number;
   description: string;
-  validate?: (value: string) => { isValid: boolean; error?: string };
+  validate?: (value: string, options?: DecoderOptions) => { isValid: boolean; error?: string };
+  extraControls?: (method: DecodeMethod, options?: DecoderOptions, onOptionsChange?: (method: DecodeMethod, options: DecoderOptions) => void) => React.ReactNode;
 }
 
 const keyConfigs: KeyConfig[] = [
@@ -63,17 +66,39 @@ const keyConfigs: KeyConfig[] = [
   {
     method: 'caesar',
     label: '凱薩位移',
-    placeholder: '請輸入位移量（1-25）',
+    placeholder: '請輸入位移量（1-25，可選擇擴展至 40）',
     type: 'number',
     min: 1,
     max: 25,
-    description: '凱薩密碼的位移量',
-    validate: (value) => {
+    description: '凱薩密碼的位移量（預設範圍 1-25）',
+    validate: (value, options) => {
       const num = parseInt(value, 10);
       if (isNaN(num)) return { isValid: false, error: '請輸入有效數字' };
-      if (num < 1 || num > 25) return { isValid: false, error: '位移量必須在 1-25 之間' };
+      const maxShift = options?.allowExtendedRange ? 40 : 25;
+      if (num < 1 || num > maxShift) {
+        return { isValid: false, error: `位移量必須在 1-${maxShift} 之間` };
+      }
       return { isValid: true };
-    }
+    },
+    extraControls: (method, options, onOptionsChange) => (
+      <div className="flex items-center mt-2">
+        <input
+          type="checkbox"
+          id="extendedRange"
+          className="form-checkbox h-4 w-4 text-primary-500"
+          checked={options?.allowExtendedRange || false}
+          onChange={(e) => {
+            if (onOptionsChange) {
+              const newOptions = { ...options, allowExtendedRange: e.target.checked };
+              onOptionsChange(method, newOptions);
+            }
+          }}
+        />
+        <label htmlFor="extendedRange" className="ml-2 text-sm text-gray-600 dark:text-gray-300">
+          擴展範圍至 1-40
+        </label>
+      </div>
+    )
   },
   {
     method: 'affine',
@@ -114,7 +139,7 @@ const keyConfigs: KeyConfig[] = [
   }
 ];
 
-const KeyInputPanel: React.FC<KeyInputPanelProps> = ({ selectedMethods, onKeyChange }) => {
+const KeyInputPanel: React.FC<KeyInputPanelProps> = ({ selectedMethods, onKeyChange, onOptionsChange, options }) => {
   const [errors, setErrors] = useState<{ [key in DecodeMethod]?: string }>({});
   const [keys, setKeys] = useState<{ [key in DecodeMethod]?: string }>({});
 
@@ -123,7 +148,7 @@ const KeyInputPanel: React.FC<KeyInputPanelProps> = ({ selectedMethods, onKeyCha
     
     const config = keyConfigs.find(c => c.method === method);
     if (config?.validate) {
-      const validation = config.validate(value);
+      const validation = config.validate(value, options);
       setErrors(prev => ({ ...prev, [method]: validation.error }));
       if (validation.isValid) {
         onKeyChange(method, value);
@@ -209,6 +234,11 @@ const KeyInputPanel: React.FC<KeyInputPanelProps> = ({ selectedMethods, onKeyCha
                 隨機
               </button>
             </div>
+            {config.extraControls && (
+              <div className="mt-2">
+                {config.extraControls(method, options, onOptionsChange)}
+              </div>
+            )}
             {errors[method] && (
               <motion.p
                 initial={{ opacity: 0 }}

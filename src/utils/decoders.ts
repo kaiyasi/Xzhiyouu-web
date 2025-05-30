@@ -63,12 +63,15 @@ export async function generateMorseAudio(morseCode: string): Promise<AudioBuffer
 
 // Caesar 密碼解碼
 function decodeCaesar(input: string, shift: number = 13): string {
+  // 確保 shift 在有效範圍內
+  const effectiveShift = ((shift % 26) + 26) % 26; // 處理負數位移
+  
   return input.split('').map(char => {
     if (char.match(/[a-z]/i)) {
       const code = char.charCodeAt(0);
       const isUpperCase = code >= 65 && code <= 90;
       const base = isUpperCase ? 65 : 97;
-      return String.fromCharCode((code - base - shift + 26) % 26 + base);
+      return String.fromCharCode((code - base - effectiveShift + 26) % 26 + base);
     }
     return char;
   }).join('');
@@ -220,12 +223,28 @@ function encodeAAencode(input: string): string {
   return encoded;
 }
 
-// 其他解碼函數
+// Base64 解碼（支援 URL 安全格式）
 function decodeBase64(input: string): string {
   try {
-    return atob(input);
-  } catch {
-    throw new Error('無效的 Base64 編碼');
+    // 處理 URL 安全格式
+    const normalizedInput = input
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+    
+    // 添加缺失的填充
+    const pad = normalizedInput.length % 4;
+    const paddedInput = pad ? normalizedInput + '='.repeat(4 - pad) : normalizedInput;
+    
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(paddedInput)) {
+      throw new Error('無效的 Base64 編碼格式');
+    }
+    
+    return atob(paddedInput);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Base64 解碼失敗');
   }
 }
 
@@ -240,48 +259,100 @@ interface MorseResult {
 
 // 十六進制解碼
 function decodeHex(input: string): string {
+  const cleanedInput = input.replace(/\s/g, '');
+  
+  if (!/^[0-9A-Fa-f]+$/.test(cleanedInput)) {
+    throw new Error('無效的十六進制編碼格式');
+  }
+  
+  if (cleanedInput.length % 2 !== 0) {
+    throw new Error('十六進制字符數必須為偶數');
+  }
+  
   try {
-    input = input.replace(/\s/g, '');
     let result = '';
-    for (let i = 0; i < input.length; i += 2) {
-      result += String.fromCharCode(parseInt(input.substr(i, 2), 16));
+    for (let i = 0; i < cleanedInput.length; i += 2) {
+      const byte = parseInt(cleanedInput.substr(i, 2), 16);
+      result += String.fromCharCode(byte);
     }
     return result;
   } catch {
-    throw new Error('無效的十六進制編碼');
+    throw new Error('十六進制解碼失敗');
   }
 }
 
 // 二進制解碼
 function decodeBinary(input: string): string {
+  const cleanedInput = input.replace(/\s/g, '');
+  
+  if (!/^[01]+$/.test(cleanedInput)) {
+    throw new Error('無效的二進制編碼格式');
+  }
+  
+  if (cleanedInput.length % 8 !== 0) {
+    throw new Error('二進制位數必須為 8 的倍數');
+  }
+  
   try {
-    return input.split(' ')
-      .map(bin => String.fromCharCode(parseInt(bin, 2)))
-      .join('');
-  } catch {
-    throw new Error('無效的二進制編碼');
+    const bytes = cleanedInput.match(/.{8}/g) || [];
+    return bytes.map(byte => {
+      const charCode = parseInt(byte, 2);
+      if (charCode > 255) {
+        throw new Error('二進制值超出範圍');
+      }
+      return String.fromCharCode(charCode);
+    }).join('');
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('二進制解碼失敗');
   }
 }
 
 // ASCII 解碼
 function decodeAscii(input: string): string {
+  const numbers = input.trim().split(/\s+/);
+  
   try {
-    return input.split(' ')
-      .map(code => String.fromCharCode(parseInt(code)))
-      .join('');
-  } catch {
-    throw new Error('無效的 ASCII 編碼');
+    return numbers.map(num => {
+      const code = parseInt(num, 10);
+      if (isNaN(code)) {
+        throw new Error('無效的 ASCII 碼');
+      }
+      if (code < 0 || code > 255) {
+        throw new Error('ASCII 碼必須在 0-255 範圍內');
+      }
+      return String.fromCharCode(code);
+    }).join('');
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('ASCII 解碼失敗');
   }
 }
 
 // 十進制解碼
 function decodeDecimal(input: string): string {
+  const numbers = input.trim().split(/\s+/);
+  
   try {
-    return input.split(' ')
-      .map(num => String.fromCharCode(parseInt(num)))
-      .join('');
-  } catch {
-    throw new Error('無效的十進制編碼');
+    return numbers.map(num => {
+      const code = parseInt(num, 10);
+      if (isNaN(code)) {
+        throw new Error('無效的十進制數');
+      }
+      if (code < 0 || code > 0x10FFFF) {
+        throw new Error('十進制數超出有效範圍');
+      }
+      return String.fromCharCode(code);
+    }).join('');
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('十進制解碼失敗');
   }
 }
 
@@ -348,12 +419,30 @@ function encodeUrl(input: string): string {
 
 // Base32 解碼
 function decodeBase32(input: string): string {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=';
-  const bits = input.toUpperCase().split('')
-    .map(char => alphabet.indexOf(char).toString(2).padStart(5, '0'))
-    .join('');
-  const bytes = bits.match(/.{8}/g) || [];
-  return bytes.map(byte => String.fromCharCode(parseInt(byte, 2))).join('');
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  const cleanedInput = input.toUpperCase().replace(/=+$/, '');
+  
+  if (!/^[A-Z2-7]*(?:={0,6})?$/.test(input.toUpperCase())) {
+    throw new Error('無效的 Base32 編碼格式');
+  }
+  
+  try {
+    const bits = cleanedInput.split('')
+      .map(char => {
+        const value = alphabet.indexOf(char);
+        if (value === -1) throw new Error('無效的 Base32 字符');
+        return value.toString(2).padStart(5, '0');
+      })
+      .join('');
+    
+    const bytes = bits.match(/.{8}/g) || [];
+    return bytes.map(byte => String.fromCharCode(parseInt(byte, 2))).join('');
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Base32 解碼失敗');
+  }
 }
 
 // Unicode 解碼
@@ -411,15 +500,38 @@ function decodeAtbash(input: string): string {
 // 維吉尼亞密碼
 function decodeVigenere(input: string, key: string): string {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  
+  // 驗證輸入
+  if (!key) {
+    throw new Error('請提供維吉尼亞密鑰');
+  }
+  
+  if (!key.match(/^[A-Za-z]+$/)) {
+    throw new Error('維吉尼亞密鑰必須只包含英文字母');
+  }
+  
   let result = '';
   let keyIndex = 0;
   
-  for (const char of input.toUpperCase()) {
-    if (alphabet.includes(char)) {
-      const shift = alphabet.indexOf(key[keyIndex % key.length].toUpperCase());
-      const charIndex = alphabet.indexOf(char);
+  for (const char of input) {
+    if (char.match(/[A-Za-z]/)) {
+      const isUpperCase = char === char.toUpperCase();
+      const charCode = char.toUpperCase().charCodeAt(0);
+      const keyChar = key[keyIndex % key.length].toUpperCase();
+      const shift = alphabet.indexOf(keyChar);
+      
+      if (shift === -1) {
+        throw new Error('無效的密鑰字符');
+      }
+      
+      const charIndex = alphabet.indexOf(char.toUpperCase());
+      if (charIndex === -1) {
+        throw new Error('無效的輸入字符');
+      }
+      
       const newIndex = (charIndex - shift + 26) % 26;
-      result += alphabet[newIndex];
+      const newChar = alphabet[newIndex];
+      result += isUpperCase ? newChar : newChar.toLowerCase();
       keyIndex++;
     } else {
       result += char;
@@ -440,9 +552,33 @@ function decodeBacon(input: string): string {
     'BBAAB': 'Z'
   };
   
-  const cleanInput = input.replace(/[^AB]/g, '');
-  const groups = cleanInput.match(/.{5}/g) || [];
-  return groups.map(group => baconDict[group] || '?').join('');
+  // 清理輸入
+  const cleanInput = input.toUpperCase().replace(/[^AB\s]/g, '');
+  
+  // 驗證輸入
+  if (!cleanInput) {
+    throw new Error('請提供培根密碼');
+  }
+  
+  const validInput = cleanInput.replace(/\s/g, '');
+  if (validInput.length % 5 !== 0) {
+    throw new Error('培根密碼長度必須是 5 的倍數');
+  }
+  
+  try {
+    const groups = validInput.match(/.{5}/g) || [];
+    return groups.map(group => {
+      if (!baconDict[group]) {
+        throw new Error(`無效的培根密碼組：${group}`);
+      }
+      return baconDict[group];
+    }).join('');
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('培根密碼解碼失敗');
+  }
 }
 
 // 波利比奧斯方陣
@@ -455,11 +591,37 @@ function decodePolybius(input: string): string {
     ['V', 'W', 'X', 'Y', 'Z']
   ];
   
-  const pairs = input.match(/\d{2}/g) || [];
-  return pairs.map(pair => {
-    const [row, col] = pair.split('').map(Number);
-    return row >= 1 && row <= 5 && col >= 1 && col <= 5 ? square[row-1][col-1] : '?';
-  }).join('');
+  // 清理輸入
+  const cleanInput = input.replace(/\s/g, '');
+  
+  // 驗證輸入
+  if (!cleanInput) {
+    throw new Error('請提供波利比奧斯方陣密碼');
+  }
+  
+  if (!/^\d+$/.test(cleanInput)) {
+    throw new Error('波利比奧斯方陣密碼必須只包含數字');
+  }
+  
+  if (cleanInput.length % 2 !== 0) {
+    throw new Error('波利比奧斯方陣密碼長度必須是偶數');
+  }
+  
+  try {
+    const pairs = cleanInput.match(/\d{2}/g) || [];
+    return pairs.map(pair => {
+      const [row, col] = pair.split('').map(Number);
+      if (row < 1 || row > 5 || col < 1 || col > 5) {
+        throw new Error(`無效的坐標：${pair}`);
+      }
+      return square[row-1][col-1];
+    }).join('');
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('波利比奧斯方陣解碼失敗');
+  }
 }
 
 // 敲擊碼
@@ -472,100 +634,182 @@ function decodeTap(input: string): string {
     ['V', 'W', 'X', 'Y', 'Z']
   ];
   
-  const pairs = input.match(/\d\s\d/g) || [];
-  return pairs.map(pair => {
-    const [row, col] = pair.split(' ').map(Number);
-    return row >= 1 && row <= 5 && col >= 1 && col <= 5 ? tapSquare[row-1][col-1] : '?';
-  }).join('');
+  // 清理輸入
+  const cleanInput = input.trim();
+  
+  // 驗證輸入
+  if (!cleanInput) {
+    throw new Error('請提供敲擊碼');
+  }
+  
+  // 檢查格式
+  if (!/^(\d\s\d\s*)+$/.test(cleanInput)) {
+    throw new Error('敲擊碼格式錯誤，應為：行號 列號 [行號 列號 ...]');
+  }
+  
+  try {
+    const pairs = cleanInput.match(/\d\s\d/g) || [];
+    return pairs.map(pair => {
+      const [row, col] = pair.split(' ').map(Number);
+      if (row < 1 || row > 5 || col < 1 || col > 5) {
+        throw new Error(`無效的坐標：${pair}`);
+      }
+      return tapSquare[row-1][col-1];
+    }).join('');
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('敲擊碼解碼失敗');
+  }
 }
 
 // 仿射密碼
 function decodeAffine(input: string, a: number, b: number): string {
+  // 計算模逆元
   const modInverse = (a: number, m: number): number => {
     for (let x = 1; x < m; x++) {
       if (((a % m) * (x % m)) % m === 1) return x;
     }
-    return 1;
+    throw new Error(`${a} 與 26 不互質`);
   };
   
-  return input.split('').map(char => {
-    if (char.match(/[A-Z]/)) {
-      const x = char.charCodeAt(0) - 65;
-      const aInv = modInverse(a, 26);
-      const y = (aInv * (x - b + 26)) % 26;
-      return String.fromCharCode(y + 65);
+  // 驗證參數
+  if (a < 1 || a > 25) {
+    throw new Error('參數 a 必須在 1-25 之間');
+  }
+  
+  if (b < 0 || b > 25) {
+    throw new Error('參數 b 必須在 0-25 之間');
+  }
+  
+  try {
+    const aInv = modInverse(a, 26);
+    
+    return input.split('').map(char => {
+      if (char.match(/[A-Za-z]/)) {
+        const isUpperCase = char === char.toUpperCase();
+        const x = char.toUpperCase().charCodeAt(0) - 65;
+        const y = (aInv * (x - b + 26)) % 26;
+        const newChar = String.fromCharCode(y + 65);
+        return isUpperCase ? newChar : newChar.toLowerCase();
+      }
+      return char;
+    }).join('');
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
     }
-    return char;
-  }).join('');
+    throw new Error('仿射密碼解碼失敗');
+  }
 }
 
 // 柵欄密碼
 function decodeRailfence(input: string, rails: number): string {
-  const fence = Array(rails).fill('').map(() => Array(input.length).fill(''));
-  let rail = 0;
-  let dir = 1;
-  
-  // 建立柵欄模式
-  for (let i = 0; i < input.length; i++) {
-    fence[rail][i] = '*';
-    rail += dir;
-    if (rail === 0 || rail === rails - 1) dir *= -1;
+  // 驗證參數
+  if (rails < 2) {
+    throw new Error('柵欄層數必須大於 1');
   }
   
-  // 填充字符
-  let index = 0;
-  for (let i = 0; i < rails; i++) {
-    for (let j = 0; j < input.length; j++) {
-      if (fence[i][j] === '*' && index < input.length) {
-        fence[i][j] = input[index++];
+  if (rails > input.length) {
+    throw new Error('柵欄層數不能大於輸入長度');
+  }
+  
+  try {
+    // 創建柵欄
+    const fence = Array(rails).fill('').map(() => Array(input.length).fill(''));
+    let rail = 0;
+    let dir = 1;
+    
+    // 標記柵欄路徑
+    for (let i = 0; i < input.length; i++) {
+      fence[rail][i] = '*';
+      rail += dir;
+      if (rail === 0 || rail === rails - 1) dir *= -1;
+    }
+    
+    // 填充字符
+    let index = 0;
+    for (let i = 0; i < rails; i++) {
+      for (let j = 0; j < input.length; j++) {
+        if (fence[i][j] === '*' && index < input.length) {
+          fence[i][j] = input[index++];
+        }
       }
     }
+    
+    // 讀取結果
+    let result = '';
+    rail = 0;
+    dir = 1;
+    
+    for (let i = 0; i < input.length; i++) {
+      result += fence[rail][i];
+      rail += dir;
+      if (rail === 0 || rail === rails - 1) dir *= -1;
+    }
+    
+    return result;
+  } catch (error) {
+    throw new Error('柵欄密碼解碼失敗');
   }
-  
-  // 讀取結果
-  let result = '';
-  rail = 0;
-  dir = 1;
-  for (let i = 0; i < input.length; i++) {
-    result += fence[rail][i];
-    rail += dir;
-    if (rail === 0 || rail === rails - 1) dir *= -1;
-  }
-  
-  return result;
 }
 
 // Playfair 密碼
 function decodePlayfair(input: string, key: string): string {
-  const matrix = KeyManager.generatePlayfairMatrix(key);
-  const pairs = input.match(/.{2}/g) || [];
-  let result = '';
+  // 驗證輸入
+  if (!key) {
+    throw new Error('請提供 Playfair 密鑰');
+  }
   
-  for (const pair of pairs) {
-    const [char1, char2] = pair.split('');
-    let pos1 = [-1, -1], pos2 = [-1, -1];
+  if (!key.match(/^[A-Za-z]+$/)) {
+    throw new Error('Playfair 密鑰必須只包含英文字母');
+  }
+  
+  if (!input.match(/^[A-Za-z\s]+$/)) {
+    throw new Error('輸入必須只包含英文字母和空格');
+  }
+  
+  try {
+    const matrix = KeyManager.generatePlayfairMatrix(key);
+    const pairs = input.replace(/\s/g, '').match(/.{2}/g) || [];
+    let result = '';
     
-    // 找到字符位置
-    for (let i = 0; i < 5; i++) {
-      for (let j = 0; j < 5; j++) {
-        if (matrix[i][j] === char1) pos1 = [i, j];
-        if (matrix[i][j] === char2) pos2 = [i, j];
+    for (const pair of pairs) {
+      const [char1, char2] = pair.split('');
+      let pos1 = [-1, -1], pos2 = [-1, -1];
+      
+      // 找到字符位置
+      for (let i = 0; i < 5; i++) {
+        for (let j = 0; j < 5; j++) {
+          if (matrix[i][j] === char1.toUpperCase()) pos1 = [i, j];
+          if (matrix[i][j] === char2.toUpperCase()) pos2 = [i, j];
+        }
+      }
+      
+      if (pos1[0] === -1 || pos2[0] === -1) {
+        throw new Error('無效的輸入字符');
+      }
+      
+      if (pos1[0] === pos2[0]) { // 同一行
+        result += matrix[pos1[0]][(pos1[1] - 1 + 5) % 5];
+        result += matrix[pos2[0]][(pos2[1] - 1 + 5) % 5];
+      } else if (pos1[1] === pos2[1]) { // 同一列
+        result += matrix[(pos1[0] - 1 + 5) % 5][pos1[1]];
+        result += matrix[(pos2[0] - 1 + 5) % 5][pos2[1]];
+      } else { // 矩形
+        result += matrix[pos1[0]][pos2[1]];
+        result += matrix[pos2[0]][pos1[1]];
       }
     }
     
-    if (pos1[0] === pos2[0]) { // 同一行
-      result += matrix[pos1[0]][(pos1[1] - 1 + 5) % 5];
-      result += matrix[pos2[0]][(pos2[1] - 1 + 5) % 5];
-    } else if (pos1[1] === pos2[1]) { // 同一列
-      result += matrix[(pos1[0] - 1 + 5) % 5][pos1[1]];
-      result += matrix[(pos2[0] - 1 + 5) % 5][pos2[1]];
-    } else { // 矩形
-      result += matrix[pos1[0]][pos2[1]];
-      result += matrix[pos2[0]][pos1[1]];
+    return result;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
     }
+    throw new Error('Playfair 密碼解碼失敗');
   }
-  
-  return result;
 }
 
 // 空白字符隱寫
@@ -637,7 +881,9 @@ const encoders: { [key in DecodeMethod]?: (input: string, options?: DecoderOptio
     if (!validation.isValid) {
       throw new Error(validation.error);
     }
-    return decodeCaesar(input, 26 - (options?.shift || 13));
+    // 加密時使用反向位移
+    const shift = options?.shift || 13;
+    return decodeCaesar(input, 26 - shift);
   },
   rot13: (input: string) => decodeCaesar(input, 13),
   morse: (input: string) => {
@@ -668,7 +914,8 @@ const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOption
     if (!validation.isValid) {
       throw new Error(validation.error);
     }
-    return decodeCaesar(input, options?.shift);
+    // 解密時直接使用位移值
+    return decodeCaesar(input, options?.shift || 13);
   },
   rot13: decodeRot13,
   atbash: decodeAtbash,
@@ -709,7 +956,7 @@ const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOption
     return decodePlayfair(input, options?.playfairKey || '');
   },
 
-  // 其他解碼器...
+  // 古典密碼
   morse: async (input: string) => {
     const result = decodeMorse(input);
     return `解密結果：${result.decodedText}\n摩斯密碼：${result.morseCode}`;
@@ -717,6 +964,8 @@ const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOption
   bacon: decodeBacon,
   polybius: decodePolybius,
   tap: decodeTap,
+
+  // 現代密碼
   md5: (input: string) => input, // 僅用於檢查，不能解碼
   sha1: (input: string) => input, // 僅用於檢查，不能解碼
   sha256: (input: string) => input, // 僅用於檢查，不能解碼
@@ -728,25 +977,84 @@ const decoders: { [key in DecodeMethod]: (input: string, options?: DecoderOption
       payload: JSON.parse(atob(payload))
     }, null, 2);
   },
-  brainfuck: (input: string) => input, // TODO: 實現 Brainfuck 解碼
-  jsfuck: (input: string) => input, // TODO: 實現 JSFuck 解碼
+
+  // 特殊編碼
+  brainfuck: decodeBrainfuck,
+  jsfuck: decodeJSFuck,
   aaencode: decodeAAencode,
-  jother: (input: string) => input, // TODO: 實現 Jother 解碼
-  ook: (input: string) => input, // TODO: 實現 Ook! 解碼
-  uuencode: (input: string) => input, // TODO: 實現 UUencode 解碼
-  xxencode: (input: string) => input, // TODO: 實現 XXencode 解碼
-  base91: (input: string) => input, // TODO: 實現 Base91 解碼
+  jother: (input: string) => input, // TODO
+  ook: decodeOok,
+  uuencode: decodeUUEncode,
+  xxencode: decodeXXEncode,
+  base91: decodeBase91,
+
+  // 隱寫術
   whitespace: decodeWhitespace,
   'zero-width': decodeZeroWidth,
-  stegano: (input: string) => input, // TODO: 實現圖片隱寫解碼
-  'audio-steg': (input: string) => input, // TODO: 實現音頻隱寫解碼
+  stegano: (input: string) => input, // TODO
+  'audio-steg': (input: string) => input, // TODO
+
+  // 其他
   reverse: (input: string) => input.split('').reverse().join(''),
-  qwerty: (input: string) => input, // TODO: 實現 QWERTY 鍵盤密碼解碼
-  keyboard: (input: string) => input, // TODO: 實現鍵盤布局密碼解碼
-  phonetic: (input: string) => input, // TODO: 實現音標密碼解碼
+  qwerty: decodeQwerty,
+  keyboard: decodeKeyboard,
+  phonetic: decodePhonetic,
   dna: decodeDNA,
-  'hex-color': (input: string) => input, // TODO: 實現顏色代碼轉換
+  'hex-color': decodeHexColor
 };
+
+// 輸入驗證和清理函數
+function validateAndCleanInput(input: string, method: DecodeMethod): string {
+  // 移除不必要的空白字符
+  let cleanedInput = input.trim();
+  
+  // 根據不同的解密方法進行特定的驗證和清理
+  switch (method) {
+    case 'base64':
+      if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanedInput)) {
+        throw new Error('無效的 Base64 編碼');
+      }
+      break;
+      
+    case 'hex':
+      cleanedInput = cleanedInput.replace(/\s/g, '');
+      if (!/^[0-9A-Fa-f]+$/.test(cleanedInput)) {
+        throw new Error('無效的十六進制編碼');
+      }
+      break;
+      
+    case 'binary':
+      cleanedInput = cleanedInput.replace(/\s/g, '');
+      if (!/^[01]+$/.test(cleanedInput)) {
+        throw new Error('無效的二進制編碼');
+      }
+      break;
+      
+    case 'decimal':
+      cleanedInput = cleanedInput.replace(/\s+/g, ' ');
+      if (!/^\d+(\s\d+)*$/.test(cleanedInput)) {
+        throw new Error('無效的十進制編碼');
+      }
+      break;
+      
+    case 'morse':
+      cleanedInput = cleanedInput.replace(/[\r\n]+/g, ' ').trim();
+      if (!/^[.-\s/]*$/.test(cleanedInput)) {
+        // 如果不是摩斯密碼格式，可能是要編碼的文本
+        break;
+      }
+      break;
+      
+    case 'bacon':
+      cleanedInput = cleanedInput.replace(/[^AB\s]/g, '');
+      if (cleanedInput.length % 5 !== 0) {
+        throw new Error('無效的培根密碼格式');
+      }
+      break;
+  }
+  
+  return cleanedInput;
+}
 
 // 解碼函數
 export async function decodeWithMethod(
@@ -760,17 +1068,442 @@ export async function decodeWithMethod(
   }
 
   try {
+    // 驗證和清理輸入
+    const cleanedInput = validateAndCleanInput(input, method);
+    
     const handler = operationType === 'encode' ? encoders[method] : decoders[method];
     if (!handler) {
       throw new Error(`不支援的${operationType === 'encode' ? '加密' : '解密'}方式`);
     }
-    return handler(input, options);
+    
+    // 使用清理後的輸入進行處理
+    return handler(cleanedInput, options);
   } catch (error) {
     throw new Error(`處理失敗：${error instanceof Error ? error.message : '未知錯誤'}`);
   }
 }
 
-// 移除重複的導出
-// export { generateMorseAudio }; 
-// export { generateMorseAudio }; 
-// export { generateMorseAudio }; 
+// Brainfuck 解碼
+function decodeBrainfuck(input: string): string {
+  const memory = new Uint8Array(30000);
+  let pointer = 0;
+  let output = '';
+  let i = 0;
+  const bracketStack: number[] = [];
+  const bracketMap = new Map<number, number>();
+  
+  // 首先建立括號匹配映射
+  for (i = 0; i < input.length; i++) {
+    if (input[i] === '[') {
+      bracketStack.push(i);
+    } else if (input[i] === ']') {
+      if (bracketStack.length === 0) {
+        throw new Error('括號不匹配');
+      }
+      const openBracket = bracketStack.pop()!;
+      bracketMap.set(openBracket, i);
+      bracketMap.set(i, openBracket);
+    }
+  }
+  
+  if (bracketStack.length > 0) {
+    throw new Error('括號不匹配');
+  }
+  
+  try {
+    for (i = 0; i < input.length; i++) {
+      switch (input[i]) {
+        case '>':
+          if (pointer >= 29999) throw new Error('記憶體指針越界');
+          pointer++;
+          break;
+        case '<':
+          if (pointer <= 0) throw new Error('記憶體指針越界');
+          pointer--;
+          break;
+        case '+':
+          memory[pointer] = (memory[pointer] + 1) % 256;
+          break;
+        case '-':
+          memory[pointer] = (memory[pointer] - 1 + 256) % 256;
+          break;
+        case '.':
+          output += String.fromCharCode(memory[pointer]);
+          break;
+        case ',':
+          // 在這個實現中，我們不處理輸入
+          break;
+        case '[':
+          if (memory[pointer] === 0) {
+            i = bracketMap.get(i) ?? i;
+          }
+          break;
+        case ']':
+          if (memory[pointer] !== 0) {
+            i = bracketMap.get(i) ?? i;
+          }
+          break;
+      }
+    }
+    return output;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Brainfuck 解碼失敗');
+  }
+}
+
+// JSFuck 解碼
+function decodeJSFuck(input: string): string {
+  try {
+    // 安全檢查
+    if (!/^[\[\]\(\)\!\+]*$/.test(input)) {
+      throw new Error('無效的 JSFuck 編碼');
+    }
+    
+    // 使用 Function 構造器而不是 eval
+    const result = new Function(`return ${input}`)();
+    return String(result);
+  } catch (error) {
+    throw new Error('JSFuck 解碼失敗');
+  }
+}
+
+// UUEncode 解碼
+function decodeUUEncode(input: string): string {
+  try {
+    const lines = input.trim().split('\n');
+    let result = '';
+    
+    // 檢查開始和結束標記
+    if (!lines[0].startsWith('begin ')) {
+      throw new Error('缺少 UUEncode 開始標記');
+    }
+    if (lines[lines.length - 1] !== 'end') {
+      throw new Error('缺少 UUEncode 結束標記');
+    }
+    
+    // 解碼每一行
+    for (let i = 1; i < lines.length - 1; i++) {
+      const line = lines[i];
+      const length = line.charCodeAt(0) - 32;
+      
+      if (length < 0 || length > 63) {
+        throw new Error(`無效的長度字符：${line[0]}`);
+      }
+      
+      let decoded = '';
+      for (let j = 1; j < line.length; j += 4) {
+        if (j + 3 >= line.length) break;
+        
+        const chars = line.slice(j, j + 4).split('').map(c => c.charCodeAt(0) - 32);
+        const bytes = [
+          ((chars[0] << 2) | (chars[1] >> 4)) & 0xff,
+          ((chars[1] << 4) | (chars[2] >> 2)) & 0xff,
+          ((chars[2] << 6) | chars[3]) & 0xff
+        ];
+        
+        decoded += bytes.map(b => String.fromCharCode(b)).join('');
+      }
+      
+      result += decoded.slice(0, length);
+    }
+    
+    return result;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('UUEncode 解碼失敗');
+  }
+}
+
+// XXEncode 解碼
+function decodeXXEncode(input: string): string {
+  try {
+    const xxDict = "+-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    const lines = input.trim().split('\n');
+    let result = '';
+    
+    // 檢查開始和結束標記
+    if (!lines[0].startsWith('begin ')) {
+      throw new Error('缺少 XXEncode 開始標記');
+    }
+    if (lines[lines.length - 1] !== 'end') {
+      throw new Error('缺少 XXEncode 結束標記');
+    }
+    
+    // 解碼每一行
+    for (let i = 1; i < lines.length - 1; i++) {
+      const line = lines[i];
+      const length = xxDict.indexOf(line[0]);
+      
+      if (length < 0) {
+        throw new Error(`無效的長度字符：${line[0]}`);
+      }
+      
+      let decoded = '';
+      for (let j = 1; j < line.length; j += 4) {
+        if (j + 3 >= line.length) break;
+        
+        const chars = line.slice(j, j + 4).split('').map(c => xxDict.indexOf(c));
+        const bytes = [
+          ((chars[0] << 2) | (chars[1] >> 4)) & 0xff,
+          ((chars[1] << 4) | (chars[2] >> 2)) & 0xff,
+          ((chars[2] << 6) | chars[3]) & 0xff
+        ];
+        
+        decoded += bytes.map(b => String.fromCharCode(b)).join('');
+      }
+      
+      result += decoded.slice(0, length);
+    }
+    
+    return result;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('XXEncode 解碼失敗');
+  }
+}
+
+// Base91 解碼
+function decodeBase91(input: string): string {
+  try {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~"';
+    let result = '';
+    let n = 0;
+    let v = -1;
+    
+    for (let i = 0; i < input.length; i++) {
+      const p = alphabet.indexOf(input[i]);
+      if (p === -1) continue;
+      
+      if (v < 0) {
+        v = p;
+      } else {
+        v += p * 91;
+        n |= v << 13;
+        do {
+          result += String.fromCharCode(n & 0xFF);
+          n >>= 8;
+        } while (n > 0);
+        v = -1;
+      }
+    }
+    
+    if (v > -1) {
+      result += String.fromCharCode((n | v) & 0xFF);
+    }
+    
+    return result;
+  } catch (error) {
+    throw new Error('Base91 解碼失敗');
+  }
+}
+
+// Ook! 解碼
+function decodeOok(input: string): string {
+  try {
+    // 將 Ook! 代碼轉換為 Brainfuck
+    const ookToBf: { [key: string]: string } = {
+      'Ook. Ook?': '>',
+      'Ook? Ook.': '<',
+      'Ook. Ook.': '+',
+      'Ook! Ook!': '-',
+      'Ook! Ook.': '.',
+      'Ook. Ook!': ',',
+      'Ook! Ook?': '[',
+      'Ook? Ook!': ']'
+    };
+    
+    // 清理輸入並轉換為 Brainfuck
+    const bfCode = input
+      .replace(/\s+/g, ' ')
+      .match(/Ook[!?.][\s]+Ook[!?.]/g)
+      ?.map(code => ookToBf[code] || '')
+      .join('') || '';
+    
+    // 使用 Brainfuck 解碼器
+    return decodeBrainfuck(bfCode);
+  } catch (error) {
+    throw new Error('Ook! 解碼失敗');
+  }
+}
+
+// QWERTY 鍵盤密碼
+function decodeQwerty(input: string): string {
+  const qwertyMap: { [key: string]: string } = {
+    'Q': 'A', 'W': 'B', 'E': 'C', 'R': 'D', 'T': 'E',
+    'Y': 'F', 'U': 'G', 'I': 'H', 'O': 'I', 'P': 'J',
+    'A': 'K', 'S': 'L', 'D': 'M', 'F': 'N', 'G': 'O',
+    'H': 'P', 'J': 'Q', 'K': 'R', 'L': 'S', ';': 'T',
+    'Z': 'U', 'X': 'V', 'C': 'W', 'V': 'X', 'B': 'Y',
+    'N': 'Z', 'M': ' '
+  };
+  
+  return input.split('').map(char => {
+    const upperChar = char.toUpperCase();
+    return qwertyMap[upperChar] || char;
+  }).join('');
+}
+
+// 鍵盤布局密碼
+function decodeKeyboard(input: string): string {
+  const keyboardMap: { [key: string]: string } = {
+    // 標準 QWERTY 鍵盤布局映射
+    '1': '!', '2': '@', '3': '#', '4': '$', '5': '%',
+    '6': '^', '7': '&', '8': '*', '9': '(', '0': ')',
+    'Q': 'W', 'W': 'E', 'E': 'R', 'R': 'T', 'T': 'Y',
+    'Y': 'U', 'U': 'I', 'I': 'O', 'O': 'P', 'P': '[',
+    'A': 'S', 'S': 'D', 'D': 'F', 'F': 'G', 'G': 'H',
+    'H': 'J', 'J': 'K', 'K': 'L', 'L': ';',
+    'Z': 'X', 'X': 'C', 'C': 'V', 'V': 'B', 'B': 'N',
+    'N': 'M', 'M': ',', ',': '.', '.': '/'
+  };
+  
+  return input.split('').map(char => {
+    const upperChar = char.toUpperCase();
+    return keyboardMap[upperChar] || char;
+  }).join('');
+}
+
+// 音標密碼
+function decodePhonetic(input: string): string {
+  const phoneticMap: { [key: string]: string } = {
+    'ALPHA': 'A', 'BRAVO': 'B', 'CHARLIE': 'C', 'DELTA': 'D',
+    'ECHO': 'E', 'FOXTROT': 'F', 'GOLF': 'G', 'HOTEL': 'H',
+    'INDIA': 'I', 'JULIETT': 'J', 'KILO': 'K', 'LIMA': 'L',
+    'MIKE': 'M', 'NOVEMBER': 'N', 'OSCAR': 'O', 'PAPA': 'P',
+    'QUEBEC': 'Q', 'ROMEO': 'R', 'SIERRA': 'S', 'TANGO': 'T',
+    'UNIFORM': 'U', 'VICTOR': 'V', 'WHISKEY': 'W', 'XRAY': 'X',
+    'YANKEE': 'Y', 'ZULU': 'Z'
+  };
+  
+  // 將輸入按空格分割
+  const words = input.toUpperCase().split(' ');
+  
+  // 解碼每個單詞
+  return words.map(word => {
+    // 檢查是否是音標代碼
+    if (phoneticMap[word]) {
+      return phoneticMap[word];
+    }
+    // 檢查是否是數字的音標代碼
+    switch (word) {
+      case 'ONE': return '1';
+      case 'TWO': return '2';
+      case 'THREE': return '3';
+      case 'FOUR': return '4';
+      case 'FIVE': return '5';
+      case 'SIX': return '6';
+      case 'SEVEN': return '7';
+      case 'EIGHT': return '8';
+      case 'NINE': return '9';
+      case 'ZERO': return '0';
+      default: return word;
+    }
+  }).join('');
+}
+
+// 顏色代碼轉換
+function decodeHexColor(input: string): string {
+  // 移除所有空白字符
+  const cleanInput = input.replace(/\s/g, '');
+  
+  // 檢查是否是有效的十六進制顏色代碼
+  if (!/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(cleanInput)) {
+    throw new Error('無效的十六進制顏色代碼');
+  }
+  
+  // 如果沒有 #，添加它
+  const hex = cleanInput.startsWith('#') ? cleanInput : `#${cleanInput}`;
+  
+  // 如果是簡寫形式，展開它
+  let fullHex = hex;
+  if (hex.length === 4) {
+    fullHex = `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
+  }
+  
+  // 將十六進制轉換為 RGB
+  const r = parseInt(fullHex.slice(1, 3), 16);
+  const g = parseInt(fullHex.slice(3, 5), 16);
+  const b = parseInt(fullHex.slice(5, 7), 16);
+  
+  // 返回顏色信息
+  return JSON.stringify({
+    hex: fullHex.toUpperCase(),
+    rgb: `rgb(${r}, ${g}, ${b})`,
+    hsl: rgbToHsl(r, g, b),
+    name: getColorName(r, g, b)
+  }, null, 2);
+}
+
+// RGB 轉 HSL
+function rgbToHsl(r: number, g: number, b: number): string {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+  
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    
+    h /= 6;
+  }
+  
+  return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
+}
+
+// 獲取顏色名稱（簡單版本）
+function getColorName(r: number, g: number, b: number): string {
+  const colorNames: { [key: string]: [number, number, number] } = {
+    'BLACK': [0, 0, 0],
+    'WHITE': [255, 255, 255],
+    'RED': [255, 0, 0],
+    'GREEN': [0, 255, 0],
+    'BLUE': [0, 0, 255],
+    'YELLOW': [255, 255, 0],
+    'CYAN': [0, 255, 255],
+    'MAGENTA': [255, 0, 255],
+    'GRAY': [128, 128, 128]
+  };
+  
+  let minDistance = Infinity;
+  let closestColor = 'UNKNOWN';
+  
+  for (const [name, [r2, g2, b2]] of Object.entries(colorNames)) {
+    const distance = Math.sqrt(
+      Math.pow(r - r2, 2) +
+      Math.pow(g - g2, 2) +
+      Math.pow(b - b2, 2)
+    );
+    
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestColor = name;
+    }
+  }
+  
+  return closestColor;
+}

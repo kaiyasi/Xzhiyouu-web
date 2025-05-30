@@ -1,262 +1,151 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Header from './components/Header';
-import InputPanel from './components/InputPanel';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { AppProvider } from './store/context';
 import DecodePanel from './components/DecodePanel';
+import InputPanel from './components/InputPanel';
 import OutputPanel from './components/OutputPanel';
-import KeyInputPanel from './components/KeyInputPanel';
+import FileUploadPanel from './components/FileUploadPanel';
+import SteganoPanel from './components/SteganoPanel';
+import AudioPanel from './components/AudioPanel';
+import ConnectedHashPanel from './components/ConnectedHashPanel';
+import HistoryPanel from './components/HistoryPanel';
 import ThemeToggle from './components/ThemeToggle';
-import { DecodeMethod, DecodeResult, OperationType, DecoderOptions } from './types';
-import { decodeWithMethod } from './utils/decoders';
+import { useAppState, useAppDispatch, useDecoder } from './store/context';
 
-function App() {
-  const [input, setInput] = useState('');
-  const [selectedMethods, setSelectedMethods] = useState<DecodeMethod[]>([]);
-  const [results, setResults] = useState<DecodeResult[]>([]);
-  const [isDecoding, setIsDecoding] = useState(false);
-  const [operationType, setOperationType] = useState<OperationType>('decode');
-  const [decoderOptions, setDecoderOptions] = useState<DecoderOptions>({});
-
-  const handleKeyChange = (method: DecodeMethod, key: string) => {
-    setDecoderOptions(prev => {
-      const newOptions = { ...prev };
-      
-      switch (method) {
-        case 'vigenere':
-          newOptions.key = key;
-          break;
-        case 'playfair':
-          newOptions.playfairKey = key;
-          break;
-        case 'railfence':
-          newOptions.rails = parseInt(key, 10);
-          break;
-        case 'caesar':
-          newOptions.shift = parseInt(key, 10);
-          break;
-        case 'affine':
-          // 假設 key 格式為 "a,b"
-          const [a, b] = key.split(',').map(n => parseInt(n.trim(), 10));
-          newOptions.a = a;
-          newOptions.b = b;
-          break;
-        case 'substitution':
-          // 解析替換表字符串為映射對象
-          const pairs = key.split(',').map(pair => pair.trim().split('='));
-          newOptions.substitutionMap = Object.fromEntries(pairs);
-          break;
-      }
-      
-      return newOptions;
-    });
-  };
-
-  const handleDecode = async () => {
-    if (!input.trim() && selectedMethods.every(m => m !== 'morse')) {
-      showToast('請輸入要處理的內容！');
-      return;
-    }
-
-    if (selectedMethods.length === 0) {
-      showToast(`請選擇至少一種${operationType === 'encode' ? '加密' : '解密'}方式！`);
-      return;
-    }
-
-    setIsDecoding(true);
-    const newResults: DecodeResult[] = [];
-
-    for (const method of selectedMethods) {
-      try {
-        const result = await decodeWithMethod(method, input, decoderOptions, operationType);
-        newResults.push({
-          method,
-          result,
-          status: 'success'
-        });
-      } catch (error) {
-        newResults.push({
-          method,
-          result: error instanceof Error ? error.message : '處理失敗',
-          status: 'error'
-        });
-      }
-    }
-
-    setResults(newResults);
-    setIsDecoding(false);
-  };
-
-  const handleWavFile = async (audioBuffer: AudioBuffer) => {
-    // 將 WAV 檔案轉換為摩斯密碼
-    const morseCode = await analyzeMorseFromAudio(audioBuffer);
-    if (morseCode) {
-      setInput(morseCode);
-      if (!selectedMethods.includes('morse')) {
-        setSelectedMethods([...selectedMethods, 'morse']);
-      }
-    }
-  };
-
-  const analyzeMorseFromAudio = async (audioBuffer: AudioBuffer): Promise<string> => {
-    // 獲取音頻數據
-    const audioData = audioBuffer.getChannelData(0);
-    const sampleRate = audioBuffer.sampleRate;
-    
-    // 設定閾值和時間參數（調整這些參數以提高準確性）
-    const amplitudeThreshold = 0.05; // 降低音量閾值以捕捉更多信號
-    const dotDuration = sampleRate * 0.1; // 點的持續時間（樣本數）
-    const dashDuration = sampleRate * 0.3; // 劃的持續時間（樣本數）
-    const tolerance = sampleRate * 0.05; // 時間容差（樣本數）
-    const wordGap = sampleRate * 0.7; // 單詞間隔（樣本數）
-    const charGap = sampleRate * 0.3; // 字符間隔（樣本數）
-
-    let morseCode = '';
-    let isSignal = false;
-    let signalStart = 0;
-    let signalLength = 0;
-    let lastSignalEnd = 0;
-    let signals: { duration: number; gap: number }[] = [];
-
-    // 使用 RMS（均方根）來計算音量
-    const calculateRMS = (start: number, length: number) => {
-      let sum = 0;
-      for (let i = start; i < start + length && i < audioData.length; i++) {
-        sum += audioData[i] * audioData[i];
-      }
-      return Math.sqrt(sum / length);
-    };
-
-    // 第一遍：收集所有信號
-    for (let i = 0; i < audioData.length; i++) {
-      const rms = calculateRMS(i, Math.floor(sampleRate * 0.01)); // 10ms 窗口
-      
-      if (rms > amplitudeThreshold && !isSignal) {
-        // 信號開始
-        isSignal = true;
-        signalStart = i;
-      } else if (rms <= amplitudeThreshold && isSignal) {
-        // 信號結束
-        isSignal = false;
-        signalLength = i - signalStart;
-        
-        if (lastSignalEnd > 0) {
-          const gap = signalStart - lastSignalEnd;
-          signals.push({ duration: signalLength, gap });
-        } else {
-          signals.push({ duration: signalLength, gap: 0 });
-        }
-        
-        lastSignalEnd = i;
-      }
-    }
-
-    // 計算平均信號持續時間來動態調整閾值
-    if (signals.length > 0) {
-      const avgDuration = signals.reduce((sum, s) => sum + s.duration, 0) / signals.length;
-      const dotThreshold = avgDuration * 0.6; // 60% 的平均持續時間作為點和劃的分界
-
-      // 第二遍：解碼信號
-      let lastGap = 0;
-      signals.forEach((signal, index) => {
-        // 添加適當的間隔
-        if (index > 0) {
-          if (signal.gap > wordGap) {
-            morseCode += ' / ';
-          } else if (signal.gap > charGap) {
-            morseCode += ' ';
-          }
-        }
-
-        // 解碼信號
-        if (signal.duration < dotThreshold) {
-          morseCode += '.';
-        } else {
-          morseCode += '-';
-        }
-      });
-    }
-
-    return morseCode;
-  };
-
-  const clearAll = () => {
-    setInput('');
-    setSelectedMethods([]);
-    setResults([]);
-    setDecoderOptions({});
-    showToast('已清除所有內容！');
-  };
+// 包裝組件以使用狀態管理
+const ConnectedDecodePanel = () => {
+  const { selectedMethods, operationType, isProcessing } = useAppState();
+  const dispatch = useAppDispatch();
+  const { decode } = useDecoder();
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-dark-bg text-gray-900 dark:text-dark-text transition-colors duration-200">
-      <div className="container mx-auto px-4 py-8">
-        <Header />
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <InputPanel
-              input={input}
-              onInputChange={setInput}
-              onWavFile={handleWavFile}
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <DecodePanel
-              selectedMethods={selectedMethods}
-              onMethodsChange={setSelectedMethods}
-              onDecode={handleDecode}
-              onClear={clearAll}
-              isDecoding={isDecoding}
-              operationType={operationType}
-              onOperationTypeChange={setOperationType}
-            />
-            {selectedMethods.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="mt-4"
-              >
-                <KeyInputPanel
-                  selectedMethods={selectedMethods}
-                  onKeyChange={handleKeyChange}
-                />
-              </motion.div>
-            )}
-          </motion.div>
-        </div>
-
-        <AnimatePresence>
-          {results.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="mt-8"
-            >
-              <OutputPanel results={results} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      <ThemeToggle />
-    </div>
+    <DecodePanel
+      selectedMethods={selectedMethods}
+      onMethodsChange={(methods) => dispatch({ type: 'SET_SELECTED_METHODS', payload: methods })}
+      onDecode={decode}
+      onClear={() => {
+        dispatch({ type: 'SET_INPUT', payload: '' });
+        dispatch({ type: 'SET_SELECTED_METHODS', payload: [] });
+        dispatch({ type: 'SET_RESULTS', payload: [] });
+        dispatch({ type: 'SET_DECODER_OPTIONS', payload: {} });
+      }}
+      isDecoding={isProcessing}
+      operationType={operationType}
+      onOperationTypeChange={(type) => dispatch({ type: 'SET_OPERATION_TYPE', payload: type })}
+    />
   );
-}
+};
 
-function showToast(message: string) {
-  // 實作 toast 通知
-  console.log(message);
+const ConnectedInputPanel = () => {
+  const { input } = useAppState();
+  const dispatch = useAppDispatch();
+
+  return (
+    <InputPanel
+      input={input}
+      onInputChange={(value) => dispatch({ type: 'SET_INPUT', payload: value })}
+      onWavFile={(buffer) => dispatch({ type: 'SET_AUDIO_BUFFER', payload: buffer })}
+    />
+  );
+};
+
+const ConnectedFileUploadPanel = () => {
+  const dispatch = useAppDispatch();
+
+  return (
+    <FileUploadPanel
+      onFileUpload={(file) => {
+        dispatch({ type: 'SET_CURRENT_FILE', payload: file });
+        dispatch({ type: 'SET_FILE_TYPE', payload: file.type });
+      }}
+    />
+  );
+};
+
+const ConnectedOutputPanel = () => {
+  const { results } = useAppState();
+  return <OutputPanel results={results} />;
+};
+
+const ConnectedSteganoPanel = () => {
+  const { decode } = useDecoder();
+  return <SteganoPanel onDecode={decode} />;
+};
+
+const ConnectedAudioPanel = () => {
+  const { decode } = useDecoder();
+  const dispatch = useAppDispatch();
+
+  return (
+    <AudioPanel
+      onDecode={decode}
+      onAnalyze={(buffer) => dispatch({ type: 'SET_AUDIO_BUFFER', payload: buffer })}
+    />
+  );
+};
+
+const ConnectedHistoryPanel = () => {
+  const { history } = useAppState();
+  const dispatch = useAppDispatch();
+
+  return (
+    <HistoryPanel
+      history={history}
+      onClear={() => dispatch({ type: 'CLEAR_HISTORY' })}
+      onRestore={(result) => {
+        dispatch({ type: 'SET_INPUT', payload: result.result });
+        dispatch({ type: 'SET_SELECTED_METHODS', payload: [result.method] });
+      }}
+      onDelete={(index) => {
+        const newHistory = [...history];
+        newHistory.splice(index, 1);
+        dispatch({ type: 'SET_RESULTS', payload: newHistory });
+      }}
+    />
+  );
+};
+
+function App() {
+  return (
+    <AppProvider>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+        <div className="container mx-auto px-4 py-8">
+          <header className="mb-8">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+                解密工具箱
+              </h1>
+              <ThemeToggle />
+            </div>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              支援多種解密方法，包括古典密碼、現代密碼和隱寫術
+            </p>
+          </header>
+
+          <main className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <section>
+              <InputPanel />
+              <DecodePanel />
+            </section>
+
+            <section>
+              <OutputPanel />
+              <HistoryPanel />
+            </section>
+
+            <section className="md:col-span-2">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <FileUploadPanel />
+                <SteganoPanel />
+                <AudioPanel />
+                <ConnectedHashPanel />
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+    </AppProvider>
+  );
 }
 
 export default App; 

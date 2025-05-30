@@ -101,7 +101,7 @@ export interface DecoderOptions {
   imageHeight?: number;
   
   // 隱寫術選項
-  steganoMethod?: 'lsb' | 'metadata' | 'eog';
+  steganoMethod?: 'lsb' | 'metadata' | 'eog' | 'spectrum' | 'echo';
   bitsPerChannel?: number;
   
   // 雜湊選項
@@ -116,6 +116,7 @@ export interface DecoderOptions {
   padding?: string;            // 填充方式
   mode?: string;               // 加密模式（如 ECB、CBC 等）
   iv?: string;                 // 初始化向量
+  allowExtendedRange?: boolean; // 是否允許擴展的凱薩密碼位移範圍（1-40）
 }
 
 export interface MorseResult {

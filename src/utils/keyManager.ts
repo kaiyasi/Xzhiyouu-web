@@ -73,8 +73,10 @@ export class KeyManager {
         if (shift === undefined) {
           return { isValid: false, error: '請輸入凱薩密碼位移量' };
         }
-        if (shift < 1 || shift > 25) {
-          return { isValid: false, error: '位移量必須在 1-25 之間' };
+        // 允許手動指定時最大到 40，但默認範圍為 1-25
+        const maxShift = options.allowExtendedRange ? 40 : 25;
+        if (shift < 1 || shift > maxShift) {
+          return { isValid: false, error: `位移量必須在 1-${maxShift} 之間` };
         }
         break;
     }
@@ -175,7 +177,7 @@ export class KeyManager {
       }
 
       case 'caesar':
-        return { shift: Math.floor(Math.random() * 25) + 1 }; // 1-25
+        return { shift: Math.floor(Math.random() * 25) + 1 }; // 默認範圍 1-25
       
       default:
         return {};
