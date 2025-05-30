@@ -9,6 +9,7 @@ import ConnectedSteganoPanel from './components/ConnectedSteganoPanel';
 import ConnectedAudioPanel from './components/ConnectedAudioPanel';
 import ConnectedHashPanel from './components/ConnectedHashPanel';
 import ConnectedHistoryPanel from './components/ConnectedHistoryPanel';
+import ConnectedSettingsPanel from './components/ConnectedSettingsPanel';
 import ThemeToggle from './components/ThemeToggle';
 
 function App() {
@@ -31,7 +32,12 @@ function App() {
           <main className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <section>
               <ConnectedInputPanel />
-              <ConnectedDecodePanel />
+              <div className="mt-4">
+                <ConnectedSettingsPanel />
+              </div>
+              <div className="mt-4">
+                <ConnectedDecodePanel />
+              </div>
             </section>
 
             <section>

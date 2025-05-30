@@ -174,6 +174,162 @@ export class Decoder {
           throw new Error('替換密碼需要替換表');
         }
         return this.decodeSubstitution(input, options.substitutionMap);
+      case 'url':
+        return {
+          method,
+          status: 'success',
+          result: decodeURIComponent(input)
+        };
+      case 'unicode':
+        return {
+          method,
+          status: 'success',
+          result: input.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => 
+            String.fromCharCode(parseInt(hex, 16))
+          )
+        };
+      case 'utf8':
+        return {
+          method,
+          status: 'success',
+          result: decodeURIComponent(escape(input))
+        };
+      case 'ascii':
+        return {
+          method,
+          status: 'success',
+          result: input.split(' ')
+            .map(code => String.fromCharCode(parseInt(code)))
+            .join('')
+        };
+      case 'decimal':
+        return {
+          method,
+          status: 'success',
+          result: input.split(' ')
+            .map(num => String.fromCharCode(parseInt(num, 10)))
+            .join('')
+        };
+      case 'base32':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeBase32(input)
+        };
+      case 'base58':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeBase58(input)
+        };
+      case 'base85':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeBase85(input)
+        };
+      case 'jwt':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeJWT(input)
+        };
+      case 'brainfuck':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeBrainfuck(input)
+        };
+      case 'jsfuck':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeJSFuck(input)
+        };
+      case 'aaencode':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeAAencode(input)
+        };
+      case 'ook':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeOok(input)
+        };
+      case 'uuencode':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeUUEncode(input)
+        };
+      case 'xxencode':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeXXEncode(input)
+        };
+      case 'base91':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeBase91(input)
+        };
+      case 'whitespace':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeWhitespace(input)
+        };
+      case 'zero-width':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeZeroWidth(input)
+        };
+      case 'tap':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeTap(input)
+        };
+      case 'reverse':
+        return {
+          method,
+          status: 'success',
+          result: input.split('').reverse().join('')
+        };
+      case 'qwerty':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeQwerty(input)
+        };
+      case 'keyboard':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeKeyboard(input)
+        };
+      case 'phonetic':
+        return {
+          method,
+          status: 'success',
+          result: this.decodePhonetic(input)
+        };
+      case 'dna':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeDNA(input)
+        };
+      case 'hex-color':
+        return {
+          method,
+          status: 'success',
+          result: this.decodeHexColor(input)
+        };
       default:
         throw new Error('不支援的文本解碼方法');
     }
@@ -694,6 +850,162 @@ export class Decoder {
             .map(char => baconMap[char] || char)
             .join(' ')
         };
+      case 'url':
+        return {
+          method,
+          status: 'success',
+          result: encodeURIComponent(input)
+        };
+      case 'unicode':
+        return {
+          method,
+          status: 'success',
+          result: input.split('')
+            .map(char => '\\u' + char.charCodeAt(0).toString(16).padStart(4, '0'))
+            .join('')
+        };
+      case 'utf8':
+        return {
+          method,
+          status: 'success',
+          result: unescape(encodeURIComponent(input))
+        };
+      case 'ascii':
+        return {
+          method,
+          status: 'success',
+          result: input.split('')
+            .map(char => char.charCodeAt(0).toString())
+            .join(' ')
+        };
+      case 'decimal':
+        return {
+          method,
+          status: 'success',
+          result: input.split('')
+            .map(char => char.charCodeAt(0).toString(10))
+            .join(' ')
+        };
+      case 'base32':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeBase32(input)
+        };
+      case 'base58':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeBase58(input)
+        };
+      case 'base85':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeBase85(input)
+        };
+      case 'jwt':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeJWT(input, options)
+        };
+      case 'brainfuck':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeBrainfuck(input)
+        };
+      case 'jsfuck':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeJSFuck(input)
+        };
+      case 'aaencode':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeAAencode(input)
+        };
+      case 'ook':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeOok(input)
+        };
+      case 'uuencode':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeUUEncode(input)
+        };
+      case 'xxencode':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeXXEncode(input)
+        };
+      case 'base91':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeBase91(input)
+        };
+      case 'whitespace':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeWhitespace(input)
+        };
+      case 'zero-width':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeZeroWidth(input)
+        };
+      case 'tap':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeTap(input)
+        };
+      case 'reverse':
+        return {
+          method,
+          status: 'success',
+          result: input.split('').reverse().join('')
+        };
+      case 'qwerty':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeQwerty(input)
+        };
+      case 'keyboard':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeKeyboard(input)
+        };
+      case 'phonetic':
+        return {
+          method,
+          status: 'success',
+          result: this.encodePhonetic(input)
+        };
+      case 'dna':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeDNA(input)
+        };
+      case 'hex-color':
+        return {
+          method,
+          status: 'success',
+          result: this.encodeHexColor(input)
+        };
       default:
         throw new Error(`不支援的加密方法：${method}`);
     }
@@ -706,4 +1018,17 @@ export class Decoder {
   clearHistory(): void {
     this.decodingHistory = [];
   }
+
+  // 新增的輔助方法
+  private decodeBase32(input: string): string {
+    // TODO: 實現 Base32 解碼
+    throw new Error('Base32 解碼尚未實現');
+  }
+
+  private encodeBase32(input: string): string {
+    // TODO: 實現 Base32 編碼
+    throw new Error('Base32 編碼尚未實現');
+  }
+
+  // ... 其他新增的輔助方法 ...
 } 
