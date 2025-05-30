@@ -151,13 +151,17 @@ async function decodeWithMethod(
   options: any,
   operationType: 'encode' | 'decode'
 ): Promise<string> {
+  const decoder = Decoder.getInstance();
+  
   if (operationType === 'encode') {
-    throw new Error('加密功能尚未實現');
+    const result = await decoder.encode(input, method as DecodeMethod, options);
+    if (result.status === 'error') {
+      throw new Error(result.result);
+    }
+    return result.result;
   }
 
-  const decoder = Decoder.getInstance();
   const result = await decoder.decode(input, method as DecodeMethod, options);
-  
   if (result.status === 'error') {
     throw new Error(result.result);
   }

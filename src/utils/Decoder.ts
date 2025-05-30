@@ -44,6 +44,33 @@ export class Decoder {
     }
   }
 
+  async encode(
+    input: string | File,
+    method: DecodeMethod,
+    options: DecoderOptions = {}
+  ): Promise<DecodeResult> {
+    try {
+      let result: DecodeResult;
+
+      if (input instanceof File) {
+        throw new Error('檔案加密尚未支援');
+      } else {
+        result = await this.encodeText(input, method, options);
+      }
+
+      this.decodingHistory.push(result);
+      return result;
+    } catch (error) {
+      const errorResult: DecodeResult = {
+        method,
+        status: 'error',
+        result: error instanceof Error ? error.message : '加密失敗',
+      };
+      this.decodingHistory.push(errorResult);
+      return errorResult;
+    }
+  }
+
   private async decodeFile(
     file: File,
     method: DecodeMethod,
@@ -538,6 +565,138 @@ export class Decoder {
         data: { map: substitutionMap }
       }
     };
+  }
+
+  private async encodeText(
+    input: string,
+    method: DecodeMethod,
+    options: DecoderOptions
+  ): Promise<DecodeResult> {
+    switch (method) {
+      case 'base64':
+        return {
+          method,
+          status: 'success',
+          result: btoa(input)
+        };
+      case 'hex':
+        return {
+          method,
+          status: 'success',
+          result: Array.from(input)
+            .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
+            .join('')
+        };
+      case 'binary':
+        return {
+          method,
+          status: 'success',
+          result: Array.from(input)
+            .map(char => char.charCodeAt(0).toString(2).padStart(8, '0'))
+            .join(' ')
+        };
+      case 'caesar':
+        const shift = options.shift || 3;
+        return {
+          method,
+          status: 'success',
+          result: input
+            .split('')
+            .map(char => {
+              const code = char.charCodeAt(0);
+              if (code >= 65 && code <= 90) {
+                return String.fromCharCode((code - 65 + shift) % 26 + 65);
+              }
+              if (code >= 97 && code <= 122) {
+                return String.fromCharCode((code - 97 + shift) % 26 + 97);
+              }
+              return char;
+            })
+            .join(''),
+          additionalInfo: { type: 'shift', data: { shift } }
+        };
+      case 'rot13':
+        return this.encodeText(input, 'caesar', { shift: 13 });
+      case 'morse':
+        const morseMap: { [key: string]: string } = {
+          'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+          'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+          'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+          'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+          'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---',
+          '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...',
+          '8': '---..', '9': '----.', ' ': '/'
+        };
+        return {
+          method,
+          status: 'success',
+          result: input.toUpperCase()
+            .split('')
+            .map(char => morseMap[char] || char)
+            .join(' ')
+        };
+      case 'vigenere':
+        if (!options.keyword) {
+          throw new Error('維吉尼亞密碼需要關鍵字');
+        }
+        const keyword = options.keyword.toUpperCase();
+        return {
+          method,
+          status: 'success',
+          result: input
+            .split('')
+            .map((char, i) => {
+              const code = char.charCodeAt(0);
+              const shift = keyword[i % keyword.length].charCodeAt(0) - 65;
+              if (code >= 65 && code <= 90) {
+                return String.fromCharCode((code - 65 + shift) % 26 + 65);
+              }
+              if (code >= 97 && code <= 122) {
+                return String.fromCharCode((code - 97 + shift) % 26 + 97);
+              }
+              return char;
+            })
+            .join(''),
+          additionalInfo: { type: 'keyword', data: { keyword } }
+        };
+      case 'atbash':
+        return {
+          method,
+          status: 'success',
+          result: input
+            .split('')
+            .map(char => {
+              const code = char.charCodeAt(0);
+              if (code >= 65 && code <= 90) {
+                return String.fromCharCode(90 - (code - 65));
+              }
+              if (code >= 97 && code <= 122) {
+                return String.fromCharCode(122 - (code - 97));
+              }
+              return char;
+            })
+            .join('')
+        };
+      case 'bacon':
+        const baconMap: { [key: string]: string } = {
+          'A': 'AAAAA', 'B': 'AAAAB', 'C': 'AAABA', 'D': 'AAABB', 'E': 'AABAA',
+          'F': 'AABAB', 'G': 'AABBA', 'H': 'AABBB', 'I': 'ABAAA', 'J': 'ABAAB',
+          'K': 'ABABA', 'L': 'ABABB', 'M': 'ABBAA', 'N': 'ABBAB', 'O': 'ABBBA',
+          'P': 'ABBBB', 'Q': 'BAAAA', 'R': 'BAAAB', 'S': 'BAABA', 'T': 'BAABB',
+          'U': 'BABAA', 'V': 'BABAB', 'W': 'BABBA', 'X': 'BABBB', 'Y': 'BBAAA',
+          'Z': 'BBAAB'
+        };
+        return {
+          method,
+          status: 'success',
+          result: input.toUpperCase()
+            .split('')
+            .map(char => baconMap[char] || char)
+            .join(' ')
+        };
+      default:
+        throw new Error(`不支援的加密方法：${method}`);
+    }
   }
 
   getHistory(): DecodeResult[] {
