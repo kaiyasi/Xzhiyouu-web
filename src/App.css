@@ -5,6 +5,7 @@
   text-align: center;
 }
 
+/* 移除可能衝突的樣式 */
 .logo {
   height: 6em;
   padding: 1.5em;
